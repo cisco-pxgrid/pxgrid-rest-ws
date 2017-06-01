@@ -9,6 +9,6 @@ Benefits of using pxGrid:
 
 This project contains documentation and samples to use pxGrid.
 
-See [documentation](http://gitlab.cisco.com/pxgrid/pxgrid-rest-ws-samples/wikis/home) to learn how to use pxGrid.
+See [documentation](https://github.com/cisco-pxgrid/pxgrid-rest-ws/wiki) to learn how to use pxGrid.
 
 
