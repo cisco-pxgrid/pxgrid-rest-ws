@@ -7,6 +7,7 @@ There are 2 objects that can be accessed:
 UserGroup is being separated out from Session object because of its size and static nature. 
 
 # Service properties
+
 | Name          | Description   | Example       |
 | ------------- | ------------- | ------------- | 
 | restBaseUrl | | https://ise-host1:8910/pxgrid/ise/session |

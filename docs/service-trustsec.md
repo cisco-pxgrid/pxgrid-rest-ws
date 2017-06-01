@@ -2,6 +2,7 @@
 This is ISE TrustSec service. Currently, it provides the status of SGACL downloads.
 
 # Service properties
+
 | Name          | Description   | Example       |
 | ------------- | ------------- | ------------- | 
 | wsPubsubService | | com.cisco.ise.pubsub |

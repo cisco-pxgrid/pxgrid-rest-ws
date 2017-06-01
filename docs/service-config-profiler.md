@@ -2,6 +2,7 @@
 This is ISE Profiler configuration
 
 # Service properties
+
 | Name          | Description   | Example       |
 | ------------- | ------------- | ------------- | 
 | restBaseUrl | | https://ise-host1:8910/pxgrid/ise/config/profiler |

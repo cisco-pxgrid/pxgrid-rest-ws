@@ -2,6 +2,7 @@
 This provides information for TrustSec configuration.
 
 # Service properties
+
 | Name          | Description   | Example       |
 | ------------- | ------------- | ------------- | 
 | restBaseUrl | | https://ise-host1:8910/pxgrid/ise/config/trustsec |
