@@ -18,27 +18,39 @@ UserGroup is being separated out from Session object because of its size and sta
 ---
 
 # REST APIs
+
 ### POST [restBaseUrl]/getSessions
+
 ##### Request
+
+```javascript
     {
       "startTimestamp": ISO8601 Datetime (optional)
     }
+```
 
 ##### Reponse
+
+```javascript
     {
       "sessions": [ 
         array of session objects
       ]
     }
+```
 
 ---
 
 ### POST [restBaseUrl]/getSessionByIpAddress
+
 ##### Request
+
     {
       "ipAddress": string (required)
     }
+
 ##### Reponse
+
     {
       session object
     }
@@ -46,11 +58,15 @@ UserGroup is being separated out from Session object because of its size and sta
 ---
 
 ### POST [restBaseUrl]/getSessionByMacAddress
+
 ##### Request
+
     {
       "macAddress": string (required)
     }
+
 ##### Reponse
+
     {
       session object
     }
@@ -58,10 +74,14 @@ UserGroup is being separated out from Session object because of its size and sta
 ---
 
 ### POST [restBaseUrl]/getUserGroups
+
 ##### Request
+
     {
     }
+
 ##### Reponse
+
     {
       "userGroups": [
         array of userGroup objects
@@ -71,11 +91,15 @@ UserGroup is being separated out from Session object because of its size and sta
 ---
 
 ### POST [restBaseUrl]/getUserGroupByUserName
+
 ##### Request
+
     {
       "userName": string (required)
     }
+
 ##### Reponse
+
     {
       "groups": [ 
         array of group objects
@@ -87,15 +111,15 @@ UserGroup is being separated out from Session object because of its size and sta
 # WS STOMP messaging
 
 ### sessionTopic
+
     {
       "sessions": [ 
         array of session objects
       ]
     }
 
----
-
 ### userGroupTopic
+
     {
       "userGroups": [
         array of userGroup objects
