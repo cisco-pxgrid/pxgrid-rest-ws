@@ -13,7 +13,7 @@ import com.cisco.pxgrid.model.Service;
 /**
  * Demonstrates how to subscribe using REST/WS
  */
-public class HttpsSessionSubscribe {
+public class SessionSubscribe {
 	// Subscribe handler class
 	private static class SessionHandler implements StompSubscription.Handler {
 		@Override

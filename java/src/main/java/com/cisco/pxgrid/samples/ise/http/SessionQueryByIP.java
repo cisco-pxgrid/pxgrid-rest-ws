@@ -8,7 +8,7 @@ import com.cisco.pxgrid.model.Service;
 /**
  * Demonstrates how to query a session using IP address
  */
-public class HttpsSessionQueryByIP {
+public class SessionQueryByIP {
 	
 	private static void query(SampleConfiguration config, String ip) throws IOException {
 		PxgridControl pxgrid = new PxgridControl(config);

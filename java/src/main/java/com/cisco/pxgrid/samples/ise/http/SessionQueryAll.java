@@ -18,7 +18,7 @@ import com.cisco.pxgrid.model.Service;
 /**
  * Demonstrates how to use query multiple sessions from ISE
  */
-public class HttpsSessionDownload {
+public class SessionQueryAll {
 	private static void downloadUsingAccessSecret(SampleConfiguration config) throws IOException, XMLStreamException, ParseException {
 		OffsetDateTime startTime = SampleHelper.promptDate("Enter start time (ex. '2015-01-31T13:00:00-07:00' or <enter> for no start time): ");
 
