@@ -2,28 +2,16 @@ package com.cisco.pxgrid.samples.ise.http;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.Principal;
-import java.security.PrivateKey;
 import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Collection;
 import java.util.Enumeration;
 
-import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509KeyManager;
-import javax.net.ssl.X509TrustManager;
 
 public class SampleConfiguration {
     protected final static String PROP_HOSTNAMES="PXGRID_HOSTNAMES";
@@ -49,8 +37,8 @@ public class SampleConfiguration {
     private String truststorePassword;
     
 	public SampleConfiguration() throws GeneralSecurityException, IOException {
-		load();
-		print();
+		loadProperties();
+		printProperties();
 	}
     
     public String getUserName() {
@@ -61,11 +49,7 @@ public class SampleConfiguration {
 		this.username = username;
 	}
 
-	public String[] getGroups() {
-		return groups;
-	}
-
-	public String getDescription() {
+    public String getDescription() {
 		return description;
 	}
 
@@ -81,7 +65,7 @@ public class SampleConfiguration {
 		return hostnames;
 	}
     
-    private void load() throws GeneralSecurityException, IOException {
+    private void loadProperties() throws GeneralSecurityException, IOException {
         String hostnameProperty = System.getProperty(PROP_HOSTNAMES);
         username = System.getProperty(PROP_USERNAME);
         password = System.getProperty(PROP_PASSWORD);
@@ -112,184 +96,43 @@ public class SampleConfiguration {
         sslContext = SSLContext.getInstance("TLSv1.2");
         sslContext.init(getKeyManagers(), getTrustManagers(), null);
     }
-    
-    public void setupAuth(HttpsURLConnection https) throws GeneralSecurityException, IOException {
-    		Authenticator.setDefault(new MyAuthenticator());
-    }
 
-    private class MyAuthenticator extends Authenticator {
-        public PasswordAuthentication getPasswordAuthentication() {
-            return (new PasswordAuthentication(username, password.toCharArray()));
-        }
-    }
-
-	private KeyManager[] getKeyManagers() throws IOException, GeneralSecurityException {
-		if (keystoreFilename == null || keystoreFilename.isEmpty())
-			return null;
+    private KeyManager[] getKeyManagers() throws IOException, GeneralSecurityException{
+        if (keystoreFilename == null || keystoreFilename.isEmpty()) return null;
 
 		KeyStore ks = keystoreFilename.endsWith(".p12") ? KeyStore.getInstance("pkcs12") : KeyStore.getInstance("JKS");
-		FileInputStream in = new FileInputStream(keystoreFilename);
-		ks.load(in, keystorePassword.toCharArray());
-		in.close();
-		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-		kmf.init(ks, keystorePassword.toCharArray());
-		KeyManager[] mngrs = kmf.getKeyManagers();
-
-		if (mngrs == null || mngrs.length == 0) {
-			throw new GeneralSecurityException("no key managers found");
-		}
-
-		if (mngrs[0] instanceof X509KeyManager == false) {
-			throw new GeneralSecurityException("key manager is not for X509");
-		}
-
-		return new KeyManager[] { new SampleX509KeyManager((X509KeyManager) mngrs[0]) };
-	}
-
+        FileInputStream in = new FileInputStream(keystoreFilename);
+        ks.load(in, keystorePassword.toCharArray());
+        in.close();
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(ks, keystorePassword.toCharArray());
+        return kmf.getKeyManagers();
+    }
+    
 	private TrustManager[] getTrustManagers() throws IOException, GeneralSecurityException {
+		KeyStore ks = truststoreFilename.endsWith(".p12") ? KeyStore.getInstance("pkcs12") : KeyStore.getInstance("JKS");
 		FileInputStream in = new FileInputStream(truststoreFilename);
-
-		KeyStore ks = null;
-		if(truststoreFilename.endsWith(".pem")) {
-			ks = KeyStore.getInstance("JKS");
-			ks.load(null, null);
-			CertificateFactory certFac = CertificateFactory.getInstance("X.509");
-			Collection<? extends Certificate> certs = certFac.generateCertificates(in);
-			int i = 0;
-			for(Certificate c : certs) {
-				ks.setCertificateEntry("trust-" + i, c);
-			}
-		} else if(truststoreFilename.endsWith(".p12")) {
-			ks = KeyStore.getInstance("pkcs12");
-			ks.load(in, truststorePassword.toCharArray());
-		} else {
-			ks = KeyStore.getInstance("JKS");
-			ks.load(in, truststorePassword.toCharArray());
-		}
-		
+		ks.load(in, truststorePassword.toCharArray());
 		in.close();
-
+		
 		Enumeration<String> e = ks.aliases();
-		boolean hasCertEntries = false;
-
 		while (e.hasMoreElements()) {
 			String alias = e.nextElement();
-
-			if (ks.isCertificateEntry(alias)) {
-				hasCertEntries = true;
-			}
-		}
-
-		if (hasCertEntries == false) {
-			e = ks.aliases();
-
-			while (e.hasMoreElements()) {
-				String alias = e.nextElement();
-
-				if (ks.isKeyEntry(alias)) {
-					Certificate[] chain = ks.getCertificateChain(alias);
-
-					for (int i = 0; i < chain.length; ++i) {
-						ks.setCertificateEntry(alias + "." + i, chain[i]);
-					}
+			if (ks.isKeyEntry(alias)) {
+				// Adding certs from PrivateKeyEntry as trusted
+				Certificate[] certs = ks.getCertificateChain(alias);
+				for (int i = 0; i < certs.length; ++i) {
+					ks.setCertificateEntry(alias + "." + i, certs[i]);
 				}
 			}
 		}
-
+		
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 		tmf.init(ks);
-
-		TrustManager[] tms = tmf.getTrustManagers();
-
-		if (tms == null || tms.length == 0) {
-			throw new GeneralSecurityException("no trust managers found");
-		}
-
-		if (tms[0] instanceof X509TrustManager == false) {
-			throw new GeneralSecurityException("trust manager is not for X509");
-		}
-
-		return new TrustManager[] { new SampleX509TrustManager((X509TrustManager) tms[0]) };
-	}
-	
-	private static class SampleX509KeyManager implements X509KeyManager {
-
-		private X509KeyManager mngr;
-
-		public SampleX509KeyManager(X509KeyManager mngr) {
-			this.mngr = mngr;
-		}
-
-		@Override
-		public String chooseClientAlias(String[] arg0, Principal[] arg1, Socket arg2) {
-			String alias = mngr.chooseClientAlias(arg0, arg1, arg2);
-
-			if (alias == null) {
-				alias = mngr.chooseClientAlias(arg0, null, arg2);
-
-				if (alias == null) {
-					throw new RuntimeException("no client certificate found ...");
-				}
-			}
-
-			return alias;
-		}
-
-		@Override
-		public String chooseServerAlias(String arg0, Principal[] arg1, Socket arg2) {
-			throw new RuntimeException("Not implemented");
-		}
-
-		@Override
-		public X509Certificate[] getCertificateChain(String arg0) {
-			return mngr.getCertificateChain(arg0);
-		}
-
-		@Override
-		public String[] getClientAliases(String arg0, Principal[] arg1) {
-			return mngr.getClientAliases(arg0, null);
-		}
-
-		@Override
-		public PrivateKey getPrivateKey(String arg0) {
-			return mngr.getPrivateKey(arg0);
-		}
-
-		@Override
-		public String[] getServerAliases(String arg0, Principal[] arg1) {
-			throw new RuntimeException("Not implemented");
-		}
+		return tmf.getTrustManagers();
 	}
 
-	private static class SampleX509TrustManager implements X509TrustManager {
-		private X509TrustManager mngr;
-
-		public SampleX509TrustManager(X509TrustManager mngr) {
-			this.mngr = mngr;
-		}
-
-		@Override
-		public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-			throw new RuntimeException("not implemented");
-		}
-
-		@Override
-		public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
-			try {
-				mngr.checkServerTrusted(arg0, arg1);
-			} catch (CertificateException e) {
-				throw new CertificateException("Server certificate is not trusted:" + arg0[0].getSubjectX500Principal(),
-						e);
-			}
-		}
-
-		@Override
-		public X509Certificate[] getAcceptedIssuers() {
-			return mngr.getAcceptedIssuers();
-		}
-	}
-
-    private void print() {
+	private void printProperties() {
         System.out.println("------- properties -------");
         System.out.print("  hostnames=");
         for (String hostname : hostnames) System.out.print(hostname + " ");

@@ -1,13 +1,10 @@
 package com.cisco.pxgrid.samples.ise.http;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
@@ -51,22 +48,6 @@ public class SampleHelper {
     	String value = prompt(msg);
     	if (value == null) return null;
     	return OffsetDateTime.parse(value);
-	}
-	
-	public static void printInputStream(HttpsURLConnection httpsConn) {
-		try (BufferedInputStream in = new BufferedInputStream(httpsConn.getInputStream())) {
-			System.out.println("Response status: " + httpsConn.getResponseCode());
-			if(httpsConn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-	        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	        	byte[] buffer = new byte[64];
-	        	int bytesRead = -1;
-	        	while((bytesRead = in.read(buffer, 0, buffer.length)) != -1)
-	        		baos.write(buffer, 0, bytesRead);
-	        	System.out.println("Content: "  + new String(baos.toByteArray()));
-        	}
-		} catch (IOException e) {
-        	e.printStackTrace();
-		}
 	}
 	
 	public static void postObjectAndPrint(String url, String user, String password, SSLSocketFactory ssl, Object postObject) throws IOException {
@@ -125,31 +106,4 @@ public class SampleHelper {
 			return formatter.parse(in.nextString(), OffsetDateTime::from);
 		}
 	}
-
-	
-	@Deprecated
-	public static void getAndPrint(String url, String user, String password, SSLSocketFactory ssl) throws IOException {
-		HttpsURLConnection httpsConn = SampleHelper.createHttpsURLConnection(url, user, password, ssl);
-    	httpsConn.setRequestMethod("GET");
-    	httpsConn.setRequestProperty("Content-Type", "application/json");
-    	httpsConn.setRequestProperty("Accept", "application/json");
-    	httpsConn.setDoInput(true);
-    	httpsConn.setDoOutput(false);
-        
-		// TODO try getContent
-        try (BufferedInputStream in = new BufferedInputStream(httpsConn.getInputStream())) {
-        	System.out.println("Response status: " + httpsConn.getResponseCode());
-        	if (httpsConn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-	        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	        	byte[] buffer = new byte[64];
-	        	int bytesRead = -1;
-	        	while((bytesRead = in.read(buffer, 0, buffer.length)) != -1)
-	        		baos.write(buffer, 0, bytesRead);
-	        	
-	        	String sessionStr = new String(baos.toByteArray(), Charset.forName("UTF-8"));
-	        	System.out.println("Content: "  + sessionStr);
-        	}
-        }
-	}
-
 }
