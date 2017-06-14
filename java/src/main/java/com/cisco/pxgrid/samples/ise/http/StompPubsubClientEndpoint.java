@@ -16,15 +16,20 @@ import javax.websocket.EndpointConfig;
 import javax.websocket.MessageHandler;
 import javax.websocket.Session;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cisco.pxgrid.samples.ise.http.StompSubscription.Handler;
 
 @ClientEndpoint
 public class StompPubsubClientEndpoint extends Endpoint {
+	private static Logger logger = LoggerFactory.getLogger(StompPubsubClientEndpoint.class);
+
 	private volatile Session session;
 	private Map<String, StompSubscription> mapOfIdToSubscription = new ConcurrentHashMap<>();
 	
 	public void connect(String hostname) throws IOException {
-    	System.out.println("STOMP CONNECT host=" + hostname);
+    	logger.info("STOMP CONNECT host=" + hostname);
 		StompFrame message = new StompFrame();
     	message.setCommand(StompFrame.Command.CONNECT);
     	message.setHeader("accept-version", "1.2");
@@ -33,7 +38,7 @@ public class StompPubsubClientEndpoint extends Endpoint {
 	}
 	
 	public void disconnect(String receipt) throws IOException {
-    	System.out.println("STOMP DISCONNECT receipt=" + receipt);
+		logger.info("STOMP DISCONNECT receipt=" + receipt);
 		StompFrame message = new StompFrame();
     	message.setCommand(StompFrame.Command.DISCONNECT);
     	if (receipt != null) {
@@ -43,7 +48,7 @@ public class StompPubsubClientEndpoint extends Endpoint {
 	}
 	
 	public void subscribe(StompSubscription subscription) throws IOException {
-    	System.out.println("STOMP SUBSCRIBE topic=" + subscription.getTopic());
+		logger.info("STOMP SUBSCRIBE topic=" + subscription.getTopic());
 		mapOfIdToSubscription.put(subscription.getId(), subscription);
 		if (session != null) {
 			StompFrame message = subscription.getSubscribeMessage();
@@ -52,7 +57,7 @@ public class StompPubsubClientEndpoint extends Endpoint {
 	}
 
 	public void publish(String topic, byte[] content) throws IOException {
-    	System.out.println("STOMP SEND topic=" + topic);
+		logger.info("STOMP SEND topic=" + topic);
 		StompFrame message = new StompFrame();
     	message.setCommand(StompFrame.Command.SEND);
     	message.setHeader("destination", topic);
@@ -82,11 +87,11 @@ public class StompPubsubClientEndpoint extends Endpoint {
 		switch (stomp.getCommand()) {
 		case CONNECTED:
 			String version = stomp.getHeader("version");
-			System.out.println("STOMP CONNECTED version=" + version);
+			logger.info("STOMP CONNECTED version={}", version);
 			break;
 		case RECEIPT:
 			String receiptId = stomp.getHeader("receipt-id");
-			System.out.println("STOMP RECEIPT id=" + receiptId);
+			logger.info("STOMP RECEIPT id={}", receiptId);
 			break;
 		case MESSAGE:
 			String id = stomp.getHeader("subscription");
@@ -98,7 +103,7 @@ public class StompPubsubClientEndpoint extends Endpoint {
 			break;
 		case ERROR:
 			// Server will close connect on ERROR according to STOMP specification
-			System.out.println("STOMP ERROR stomp=" + stomp);
+			logger.info("STOMP ERROR stomp={}", stomp);
 			break;
 		default:
 			// Ignore others
@@ -113,7 +118,7 @@ public class StompPubsubClientEndpoint extends Endpoint {
         		StompFrame stomp = StompFrame.parse(new ByteArrayInputStream(message.getBytes()));
         		onStompMessage(stomp);
         	} catch (IOException | ParseException e) {
-        		e.printStackTrace();
+        		logger.error("onMessage", e);
         	}
 		}
 	}
@@ -125,14 +130,14 @@ public class StompPubsubClientEndpoint extends Endpoint {
 				StompFrame stomp = StompFrame.parse(in);
 				onStompMessage(stomp);
 			} catch (IOException | ParseException e) {
-				e.printStackTrace();
+        		logger.error("onMessage", e);
 			}
 		}
 	}
 	
 	@Override
 	public void onOpen(Session session, EndpointConfig cfg) {
-		System.out.println("WS onOpen");
+		logger.info("WS onOpen");
 		this.session = session;
 		try {
 	    	session.addMessageHandler(new TextHandler());
@@ -140,11 +145,11 @@ public class StompPubsubClientEndpoint extends Endpoint {
 
         	for (StompSubscription subscription : mapOfIdToSubscription.values()) {
     			StompFrame message = subscription.getSubscribeMessage();
-    			send(message);
+					send(message);
 			}
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		} catch (IOException e) {
+			logger.error("onOpen", e);
+		}
 		synchronized (this) {
 			this.notifyAll();
 		}
@@ -152,13 +157,13 @@ public class StompPubsubClientEndpoint extends Endpoint {
 
 	@Override
 	public void onClose(Session session, CloseReason closeReason) {
-		System.out.println("WS onClose closeReason code=" + closeReason.getCloseCode() + " phrase=" + closeReason.getReasonPhrase());
+		logger.info("WS onClose closeReason code={} phrase={}", closeReason.getCloseCode(), closeReason.getReasonPhrase());
 		this.session = null;
 	}
 	
 	@Override
 	public void onError(Session session, Throwable thr) {
-		System.out.println("WS onError thr=" + thr.getMessage());
+		logger.info("WS onError thr={}", thr.getMessage());
 		this.session = null;
 	}
 }

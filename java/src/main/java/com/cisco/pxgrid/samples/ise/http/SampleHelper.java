@@ -16,6 +16,8 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,6 +27,8 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 public class SampleHelper {
+	private static Logger logger = LoggerFactory.getLogger(SampleHelper.class);
+
 	public static HttpsURLConnection createHttpsURLConnection(String url, String user, String password, SSLSocketFactory sslSocketFactory) throws IOException {
 		URL conn = new URL(url);
 		HttpsURLConnection https = (HttpsURLConnection) conn.openConnection();
@@ -58,6 +62,7 @@ public class SampleHelper {
 	}
 	
 	public static void postStringAndPrint(String url, String user, String password, SSLSocketFactory ssl, String postData) throws IOException {
+		logger.info("postData={}", postData);
 		HttpsURLConnection httpsConn = SampleHelper.createHttpsURLConnection(url, user, password, ssl);
     	httpsConn.setRequestMethod("POST");
     	httpsConn.setRequestProperty("Content-Type", "application/json");
@@ -70,7 +75,7 @@ public class SampleHelper {
 		osw.flush();
 
 		int status = httpsConn.getResponseCode();
-    	System.out.println("Response status: " + status);
+    	logger.info("Response status={}", status);
 
 		if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
 			try (InputStream in = httpsConn.getInputStream()) {

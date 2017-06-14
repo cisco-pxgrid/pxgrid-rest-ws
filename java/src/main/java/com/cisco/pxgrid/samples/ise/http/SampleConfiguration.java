@@ -16,8 +16,8 @@ import javax.net.ssl.TrustManagerFactory;
 public class SampleConfiguration {
     protected final static String PROP_HOSTNAMES="PXGRID_HOSTNAMES";
     protected final static String PROP_USERNAME="PXGRID_USERNAME";
+    protected final static String PROP_NODENAME="PXGRID_NODENAME";
     protected final static String PROP_PASSWORD="PXGRID_PASSWORD";
-    protected final static String PROP_GROUP="PXGRID_GROUP";
     protected final static String PROP_DESCRIPTION="PXGRID_DESCRIPTION";
     protected final static String PROP_KEYSTORE_FILENAME="PXGRID_KEYSTORE_FILENAME";
     protected final static String PROP_KEYSTORE_PASSWORD="PXGRID_KEYSTORE_PASSWORD";
@@ -25,9 +25,8 @@ public class SampleConfiguration {
     protected final static String PROP_TRUSTSTORE_PASSWORD="PXGRID_TRUSTSTORE_PASSWORD";
 
     private String[] hostnames;
-    private String username;
+    private String nodeName;
     private String password;
-    private String[] groups;
     private String description;
     private SSLContext sslContext;
 
@@ -41,12 +40,12 @@ public class SampleConfiguration {
 		printProperties();
 	}
     
-    public String getUserName() {
-		return username;
+    public String getNodeName() {
+		return nodeName;
 	}
 
-    public void setUsername(String username) {
-		this.username = username;
+    public void setNodeName(String nodeName) {
+		this.nodeName = nodeName;
 	}
 
     public String getDescription() {
@@ -67,9 +66,12 @@ public class SampleConfiguration {
     
     private void loadProperties() throws GeneralSecurityException, IOException {
         String hostnameProperty = System.getProperty(PROP_HOSTNAMES);
-        username = System.getProperty(PROP_USERNAME);
+        nodeName = System.getProperty(PROP_NODENAME);
+        if (nodeName == null) {
+        	// For older scripts
+            nodeName = System.getProperty(PROP_USERNAME);
+        }
         password = System.getProperty(PROP_PASSWORD);
-        String group_property = System.getProperty(PROP_GROUP);
         description = System.getProperty(PROP_DESCRIPTION);
 
         keystoreFilename = System.getProperty(PROP_KEYSTORE_FILENAME);
@@ -78,15 +80,11 @@ public class SampleConfiguration {
         truststorePassword = System.getProperty(PROP_TRUSTSTORE_PASSWORD);
        
         if (hostnameProperty == null || hostnameProperty.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_HOSTNAMES);
-        if (username == null || username.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_USERNAME);
+        if (nodeName == null || nodeName.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_USERNAME);
         if (truststoreFilename == null || truststoreFilename.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_TRUSTSTORE_FILENAME);
         if (truststorePassword == null || truststorePassword.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_TRUSTSTORE_PASSWORD);
 
         hostnames = hostnameProperty.split(",");
-        
-        if (group_property != null && !group_property.isEmpty()) {
-        		groups = group_property.split(",");
-        }
         
         if (description != null) {
                 if (description.isEmpty()) description = null;
@@ -137,11 +135,8 @@ public class SampleConfiguration {
         System.out.print("  hostnames=");
         for (String hostname : hostnames) System.out.print(hostname + " ");
         System.out.println();
-        System.out.println("  username=" + username);
+        System.out.println("  nodeName=" + nodeName);
         System.out.println("  password=" + password);
-        System.out.print("  groups=");
-        for (String group : groups) System.out.print(group + " ");
-        System.out.println();
         System.out.println("  description=" + description);
         System.out.println("  keystoreFilename=" + keystoreFilename);
         System.out.println("  keystorePassword=" + keystorePassword);

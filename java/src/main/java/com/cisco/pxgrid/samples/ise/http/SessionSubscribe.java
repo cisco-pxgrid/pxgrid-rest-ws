@@ -6,6 +6,8 @@ import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.client.ClientProperties;
 import org.glassfish.tyrus.client.auth.Credentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.cisco.pxgrid.model.AccountState;
 import com.cisco.pxgrid.model.Service;
@@ -14,11 +16,13 @@ import com.cisco.pxgrid.model.Service;
  * Demonstrates how to subscribe using REST/WS
  */
 public class SessionSubscribe {
+	private static Logger logger = LoggerFactory.getLogger(SessionSubscribe.class);
+
 	// Subscribe handler class
 	private static class SessionHandler implements StompSubscription.Handler {
 		@Override
 		public void handle(StompFrame message) {
-			System.out.println(new String(message.getContent()));
+			logger.info("Content={}", new String(message.getContent()));
 		}
 	}
 
@@ -32,31 +36,31 @@ public class SessionSubscribe {
 		while (control.accountActivate() != AccountState.ENABLED) {
 			Thread.sleep(60000);
 		}
-		Console.log("pxGrid controller version=" + control.getControllerVersion());
+		logger.info("pxGrid controller version=" + control.getControllerVersion());
 
 		// Session ServiceLookup
-		Console.log("Looking up service com.cisco.ise.session");
+		logger.info("Looking up service com.cisco.ise.session");
 		Service[] services = control.lookupService("com.cisco.ise.session");
 		if (services.length == 0) {
-			Console.log("Session service unavailabe");
+			logger.info("Session service unavailabe");
 			return;
 		}
 		
 		Service sessionService = services[0];
 		String wsPubsubServiceName = sessionService.getProperties().get("wsPubsubService");
 		String sessionTopic = sessionService.getProperties().get("sessionTopic");
-		Console.log("wsPubsubServiceName=" + wsPubsubServiceName + " sessionTopic=" + sessionTopic);
+		logger.info("wsPubsubServiceName=" + wsPubsubServiceName + " sessionTopic=" + sessionTopic);
 		// Pubsub ServiceLookup
 		services = control.lookupService(wsPubsubServiceName);
 		if (services.length == 0) {
-			Console.log("Pubsub service unavailabe");
+			logger.info("Pubsub service unavailabe");
 			return;
 		}
 
 		// Select first one for sample purpose. Should cycle through until connects.
 		Service wsPubsubService = services[0];
 		String wsURL = wsPubsubService.getProperties().get("wsUrl");
-		Console.log("url=" + wsURL);
+		logger.info("wsUrl=" + wsURL);
 
 		// pxGrid AccessSecret
 		String secret = control.getAccessSecret(wsPubsubService.getNodeName());
@@ -66,7 +70,7 @@ public class SessionSubscribe {
 		SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(config.getSSLContext());
 		client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
 		client.getProperties().put(ClientProperties.CREDENTIALS,
-				new Credentials(config.getUserName(), secret.getBytes()));
+				new Credentials(config.getNodeName(), secret.getBytes()));
 
 		// WebSocket connect
 		StompPubsubClientEndpoint endpoint = new StompPubsubClientEndpoint();
@@ -80,8 +84,7 @@ public class SessionSubscribe {
 		StompSubscription subscription = new StompSubscription(sessionTopic, new SessionHandler());
 		endpoint.subscribe(subscription);
 
-		Console.log("press <enter> to disconnect...");
-		System.in.read();
+		SampleHelper.prompt("press <enter> to disconnect...");
 
 		// STOMP disconnect
 		endpoint.disconnect("ID-123");

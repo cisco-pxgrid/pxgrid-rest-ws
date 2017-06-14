@@ -9,6 +9,9 @@ import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.cisco.pxgrid.model.AccessSecretRequest;
 import com.cisco.pxgrid.model.AccessSecretResponse;
 import com.cisco.pxgrid.model.AccountActivateRequest;
@@ -30,6 +33,7 @@ import com.google.gson.Gson;
  * Using HTTPS for pxGrid control
  */
 public class PxgridControl {
+	private static Logger logger = LoggerFactory.getLogger(PxgridControl.class);
 	private SampleConfiguration config;
     private String controllerVersion;
     
@@ -44,13 +48,13 @@ public class PxgridControl {
 		Gson gson = new Gson();
 
 		OutputStreamWriter out = new OutputStreamWriter(https.getOutputStream());
-		Console.log("Request is: " + gson.toJson(request));
+		logger.info("Request={}", gson.toJson(request));
 		gson.toJson(request, out);
 		out.flush();
 
     	InputStreamReader in = new InputStreamReader(https.getInputStream());
     	T response = gson.fromJson(in, responseClass);
-    	Console.log("Response is: " + gson.toJson(response));
+		logger.info("Response={}", gson.toJson(response));
 
     	return response;
 	}
@@ -65,10 +69,7 @@ public class PxgridControl {
 		
 		https.setRequestMethod("POST");
 
-		// TODO To be removed later
-		https.setRequestProperty("user", config.getUserName());
-
-		String userPassword = config.getUserName() + ":" + config.getPassword();
+		String userPassword = config.getNodeName() + ":" + config.getPassword();
 		String encoded = Base64.getEncoder().encodeToString(userPassword.getBytes());
 		https.setRequestProperty("Authorization", "Basic " + encoded);
 
@@ -84,10 +85,10 @@ public class PxgridControl {
      * 
      * @return password
      */
-    public String AccountCreate() throws IOException {
+    public String accountCreate() throws IOException {
     	HttpsURLConnection https = getHttpsURLConnection("AccountCreate");
 		AccountCreateRequest request = new AccountCreateRequest();
-		request.setNodeName(config.getUserName());
+		request.setNodeName(config.getNodeName());
 		AccountCreateResponse response = sendRequest(https, request, AccountCreateResponse.class);
 		return response.getPassword();
     }
