@@ -7,7 +7,9 @@ import java.net.URL;
 import java.util.Base64;
 import java.util.Map;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +74,12 @@ public class PxgridControl {
 		String userPassword = config.getNodeName() + ":" + config.getPassword();
 		String encoded = Base64.getEncoder().encodeToString(userPassword.getBytes());
 		https.setRequestProperty("Authorization", "Basic " + encoded);
-
+		https.setHostnameVerifier(new HostnameVerifier() {
+			@Override
+			public boolean verify(String hostname, SSLSession session) {
+				return true;
+			}
+		});
 		https.setDoInput(true);
 		https.setDoOutput(true);
 		

@@ -2,9 +2,12 @@ package com.cisco.pxgrid.samples.ise.http;
 
 import java.net.URI;
 
-import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLSession;
+
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.client.ClientProperties;
+import org.glassfish.tyrus.client.SslEngineConfigurator;
 import org.glassfish.tyrus.client.auth.Credentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,11 +70,17 @@ public class SessionSubscribe {
 
 		// WebSocket config
 		ClientManager client = ClientManager.createClient();
-		SSLEngineConfigurator sslEngineConfigurator = new SSLEngineConfigurator(config.getSSLContext());
+		SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(config.getSSLContext());
+		sslEngineConfigurator.setHostnameVerifier(new HostnameVerifier() {
+			@Override
+			public boolean verify(String hostname, SSLSession session) {
+				return true;
+			}
+		});
 		client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
 		client.getProperties().put(ClientProperties.CREDENTIALS,
 				new Credentials(config.getNodeName(), secret.getBytes()));
-
+		
 		// WebSocket connect
 		StompPubsubClientEndpoint endpoint = new StompPubsubClientEndpoint();
 		URI uri = new URI(wsURL);
