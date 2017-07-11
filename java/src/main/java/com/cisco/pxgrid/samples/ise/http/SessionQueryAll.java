@@ -17,11 +17,11 @@ public class SessionQueryAll {
 	private static Logger logger = LoggerFactory.getLogger(SessionQueryAll.class);
 	
 	private static class SessionQueryRequest {
-		OffsetDateTime startTime;
+		OffsetDateTime startTimestamp;
 	}
 
 	private static void downloadUsingAccessSecret(SampleConfiguration config) throws IOException, ParseException {
-		OffsetDateTime startTime = SampleHelper.promptDate("Enter start time (ex. '2015-01-31T13:00:00-07:00' or <enter> for no start time): ");
+		OffsetDateTime startTimestamp = SampleHelper.promptDate("Enter start time (ex. '2015-01-31T13:00:00-07:00' or <enter> for no start time): ");
 
 		
 		PxgridControl https = new PxgridControl(config);
@@ -37,7 +37,7 @@ public class SessionQueryAll {
 		
 		String secret = https.getAccessSecret(service.getNodeName());
 		SessionQueryRequest request = new SessionQueryRequest();
-		request.startTime = startTime;
+		request.startTimestamp = startTimestamp;
 		SampleHelper.postObjectAndPrint(url, config.getNodeName(), secret, config.getSSLContext().getSocketFactory(), request);
 	}
 
