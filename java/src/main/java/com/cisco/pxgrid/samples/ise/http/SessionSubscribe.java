@@ -5,6 +5,8 @@ import java.net.URI;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.ParseException;
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.client.ClientProperties;
 import org.glassfish.tyrus.client.SslEngineConfigurator;
@@ -29,19 +31,25 @@ public class SessionSubscribe {
 		}
 	}
 
-	public static void main(String [] args) throws Exception {
-		// Read environment for config
+	public static void main(String[] args) throws Exception {
+		// Parse arguments
 		SampleConfiguration config = new SampleConfiguration();
-		
-		PxgridControl control = new PxgridControl(config);
+		try {
+			config.parse(args);
+		} catch (ParseException e) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp( "SessionSubscribe", config.getOptions());
+			System.exit(1);
+		}
 		
 		// AccountActivate
+		PxgridControl control = new PxgridControl(config);
 		while (control.accountActivate() != AccountState.ENABLED) {
 			Thread.sleep(60000);
 		}
 		logger.info("pxGrid controller version=" + control.getControllerVersion());
 
-		// Session ServiceLookup
+		// pxGrid ServiceLookup for session service
 		logger.info("Looking up service com.cisco.ise.session");
 		Service[] services = control.lookupService("com.cisco.ise.session");
 		if (services.length == 0) {
@@ -49,23 +57,25 @@ public class SessionSubscribe {
 			return;
 		}
 		
+		// Use first service
 		Service sessionService = services[0];
 		String wsPubsubServiceName = sessionService.getProperties().get("wsPubsubService");
 		String sessionTopic = sessionService.getProperties().get("sessionTopic");
 		logger.info("wsPubsubServiceName=" + wsPubsubServiceName + " sessionTopic=" + sessionTopic);
-		// Pubsub ServiceLookup
+		
+		// pxGrid ServiceLookup for pubsub service
 		services = control.lookupService(wsPubsubServiceName);
 		if (services.length == 0) {
 			logger.info("Pubsub service unavailabe");
 			return;
 		}
 
-		// Select first one for sample purpose. Should cycle through until connects.
+		// Use first service
 		Service wsPubsubService = services[0];
 		String wsURL = wsPubsubService.getProperties().get("wsUrl");
 		logger.info("wsUrl=" + wsURL);
 
-		// pxGrid AccessSecret
+		// pxGrid get AccessSecret
 		String secret = control.getAccessSecret(wsPubsubService.getNodeName());
 
 		// WebSocket config

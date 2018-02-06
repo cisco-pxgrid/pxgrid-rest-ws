@@ -2,6 +2,8 @@ package com.cisco.pxgrid.samples.ise.http;
 
 import java.io.IOException;
 
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +30,20 @@ public class SessionQueryByIP {
 		String postData = "{\"ipAddress\":\"" + ip + "\"}";
 		SampleHelper.postStringAndPrint(url, config.getNodeName(), secret, config.getSSLContext().getSocketFactory(), postData);
 	}
-	
 
 	public static void main(String [] args) throws Exception {
+		// Parse arguments
 		SampleConfiguration config = new SampleConfiguration();
+		try {
+			config.parse(args);
+		} catch (ParseException e) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp( "SessionSubscribe", config.getOptions());
+			System.exit(1);
+		}
+
+		// AccountActivate
 		PxgridControl pxgrid = new PxgridControl(config);
-		
 		while (pxgrid.accountActivate() != AccountState.ENABLED)
 			Thread.sleep(60000);
 		logger.info("pxGrid controller version=" + pxgrid.getControllerVersion());

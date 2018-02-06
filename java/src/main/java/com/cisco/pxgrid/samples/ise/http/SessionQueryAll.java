@@ -1,9 +1,9 @@
 package com.cisco.pxgrid.samples.ise.http;
 
-import java.io.IOException;
-import java.text.ParseException;
 import java.time.OffsetDateTime;
 
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,9 +20,8 @@ public class SessionQueryAll {
 		OffsetDateTime startTimestamp;
 	}
 
-	private static void downloadUsingAccessSecret(SampleConfiguration config) throws IOException, ParseException {
+	private static void downloadUsingAccessSecret(SampleConfiguration config) throws Exception {
 		OffsetDateTime startTimestamp = SampleHelper.promptDate("Enter start time (ex. '2015-01-31T13:00:00-07:00' or <enter> for no start time): ");
-
 		
 		PxgridControl https = new PxgridControl(config);
 		Service[] services = https.lookupService("com.cisco.ise.session");
@@ -42,9 +41,18 @@ public class SessionQueryAll {
 	}
 
 	public static void main(String [] args) throws Exception {
+		// Parse arguments
 		SampleConfiguration config = new SampleConfiguration();
+		try {
+			config.parse(args);
+		} catch (ParseException e) {
+			HelpFormatter formatter = new HelpFormatter();
+			formatter.printHelp( "SessionSubscribe", config.getOptions());
+			System.exit(1);
+		}
+
+		// AccountActivate
 		PxgridControl control = new PxgridControl(config);
-		
 		while (control.accountActivate() != AccountState.ENABLED)
 			Thread.sleep(60000);
 		logger.info("pxGrid controller version=" + control.getControllerVersion());

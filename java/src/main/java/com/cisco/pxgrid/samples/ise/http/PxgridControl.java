@@ -39,8 +39,8 @@ public class PxgridControl {
 	private SampleConfiguration config;
     private String controllerVersion;
     
-    public PxgridControl(SampleConfiguration config) {
-    	this.config = config;
+	public PxgridControl(SampleConfiguration config) {
+		this.config = config;
 	}
     
 	private <T> T sendRequest(HttpsURLConnection https, Object request, Class<T> responseClass) throws IOException {

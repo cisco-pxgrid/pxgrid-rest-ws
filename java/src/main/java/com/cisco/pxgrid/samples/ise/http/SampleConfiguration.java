@@ -4,8 +4,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
-import java.util.Enumeration;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -13,39 +11,47 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-public class SampleConfiguration {
-    protected final static String PROP_HOSTNAMES="PXGRID_HOSTNAMES";
-    protected final static String PROP_USERNAME="PXGRID_USERNAME";
-    protected final static String PROP_NODENAME="PXGRID_NODENAME";
-    protected final static String PROP_PASSWORD="PXGRID_PASSWORD";
-    protected final static String PROP_DESCRIPTION="PXGRID_DESCRIPTION";
-    protected final static String PROP_KEYSTORE_FILENAME="PXGRID_KEYSTORE_FILENAME";
-    protected final static String PROP_KEYSTORE_PASSWORD="PXGRID_KEYSTORE_PASSWORD";
-    protected final static String PROP_TRUSTSTORE_FILENAME="PXGRID_TRUSTSTORE_FILENAME";
-    protected final static String PROP_TRUSTSTORE_PASSWORD="PXGRID_TRUSTSTORE_PASSWORD";
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
+public class SampleConfiguration {
     private String[] hostnames;
     private String nodeName;
     private String password;
     private String description;
-    private SSLContext sslContext;
-
     private String keystoreFilename;
     private String keystorePassword;
     private String truststoreFilename;
     private String truststorePassword;
-    
-	public SampleConfiguration() throws GeneralSecurityException, IOException {
-		loadProperties();
-		printProperties();
+
+    private SSLContext sslContext;
+    private Options options = new Options();
+
+	public SampleConfiguration() {
+		options.addOption("a", "hostname", true, "Host name (multiple ok)");
+		options.addOption("u", "nodename", true, "Node name");
+		options.addOption("w", "password", true, "Password");
+		options.addOption("d", "description", true, "Description (optional)");
+		options.addOption("k", "keystorefilename", true, "Keystore .jks filename (optional)");
+		options.addOption("p", "keystorepassword", true, "Keystore password (required if keystore filename used)");
+		options.addOption("t", "truststorefilename", true, "Truststore .jks filename");
+		options.addOption("q", "truststorepassword", true, "Truststore password");
 	}
     
     public String getNodeName() {
 		return nodeName;
 	}
 
-    public void setNodeName(String nodeName) {
-		this.nodeName = nodeName;
+    public String[] getHostnames() {
+		return hostnames;
+	}
+
+    public String getPassword() {
+		return password;
 	}
 
     public String getDescription() {
@@ -53,52 +59,18 @@ public class SampleConfiguration {
 	}
 
     public SSLContext getSSLContext() {
-    	return sslContext;
+    		return sslContext;
     }
     
-    public String getPassword() {
-		return password;
+    public Options getOptions() {
+		return options;
 	}
     
-    public String[] getHostnames() {
-		return hostnames;
-	}
-    
-    private void loadProperties() throws GeneralSecurityException, IOException {
-        String hostnameProperty = System.getProperty(PROP_HOSTNAMES);
-        nodeName = System.getProperty(PROP_NODENAME);
-        if (nodeName == null) {
-        	// For older scripts
-            nodeName = System.getProperty(PROP_USERNAME);
+    private KeyManager[] getKeyManagers() throws IOException, GeneralSecurityException {
+        if (keystoreFilename == null) {
+        		return null;
         }
-        password = System.getProperty(PROP_PASSWORD);
-        description = System.getProperty(PROP_DESCRIPTION);
-
-        keystoreFilename = System.getProperty(PROP_KEYSTORE_FILENAME);
-        keystorePassword = System.getProperty(PROP_KEYSTORE_PASSWORD);
-        truststoreFilename = System.getProperty(PROP_TRUSTSTORE_FILENAME);
-        truststorePassword = System.getProperty(PROP_TRUSTSTORE_PASSWORD);
-       
-        if (hostnameProperty == null || hostnameProperty.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_HOSTNAMES);
-        if (nodeName == null || nodeName.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_USERNAME);
-        if (truststoreFilename == null || truststoreFilename.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_TRUSTSTORE_FILENAME);
-        if (truststorePassword == null || truststorePassword.isEmpty()) throw new IllegalArgumentException("Missing " + PROP_TRUSTSTORE_PASSWORD);
-
-        hostnames = hostnameProperty.split(",");
-        
-        if (description != null) {
-                if (description.isEmpty()) description = null;
-                else description = description.trim();
-        }
-
-        sslContext = SSLContext.getInstance("TLSv1.2");
-        sslContext.init(getKeyManagers(), getTrustManagers(), null);
-    }
-
-    private KeyManager[] getKeyManagers() throws IOException, GeneralSecurityException{
-        if (keystoreFilename == null || keystoreFilename.isEmpty()) return null;
-
-		KeyStore ks = keystoreFilename.endsWith(".p12") ? KeyStore.getInstance("pkcs12") : KeyStore.getInstance("JKS");
+		KeyStore ks = KeyStore.getInstance("JKS");
         FileInputStream in = new FileInputStream(keystoreFilename);
         ks.load(in, keystorePassword.toCharArray());
         in.close();
@@ -108,40 +80,49 @@ public class SampleConfiguration {
     }
     
 	private TrustManager[] getTrustManagers() throws IOException, GeneralSecurityException {
-		KeyStore ks = truststoreFilename.endsWith(".p12") ? KeyStore.getInstance("pkcs12") : KeyStore.getInstance("JKS");
+		KeyStore ks = KeyStore.getInstance("JKS");
 		FileInputStream in = new FileInputStream(truststoreFilename);
 		ks.load(in, truststorePassword.toCharArray());
 		in.close();
-		
-		Enumeration<String> e = ks.aliases();
-		while (e.hasMoreElements()) {
-			String alias = e.nextElement();
-			if (ks.isKeyEntry(alias)) {
-				// Adding certs from PrivateKeyEntry as trusted
-				Certificate[] certs = ks.getCertificateChain(alias);
-				for (int i = 0; i < certs.length; ++i) {
-					ks.setCertificateEntry(alias + "." + i, certs[i]);
-				}
-			}
-		}
-		
 		TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 		tmf.init(ks);
 		return tmf.getTrustManagers();
 	}
 
-	private void printProperties() {
-        System.out.println("------- properties -------");
-        System.out.print("  hostnames=");
-        for (String hostname : hostnames) System.out.print(hostname + " ");
-        System.out.println();
-        System.out.println("  nodeName=" + nodeName);
-        System.out.println("  password=" + password);
-        System.out.println("  description=" + description);
-        System.out.println("  keystoreFilename=" + keystoreFilename);
-        System.out.println("  keystorePassword=" + keystorePassword);
-        System.out.println("  truststoreFilename=" + truststoreFilename);
-        System.out.println("  truststorePassword=" + truststorePassword);
-        System.out.println("--------------------------");
-    }
+	public void parse(String[] args) throws ParseException, IOException, GeneralSecurityException {
+		CommandLineParser parser = new DefaultParser();
+		CommandLine cmd = parser.parse(options, args);
+		
+		hostnames = cmd.getOptionValues("a");
+		nodeName = cmd.getOptionValue("u");
+		password = cmd.getOptionValue("w");
+		description = cmd.getOptionValue("d");
+		keystoreFilename = cmd.getOptionValue("k");
+		keystorePassword = cmd.getOptionValue("p");
+		truststoreFilename = cmd.getOptionValue("k");
+		truststorePassword = cmd.getOptionValue("p");
+       
+        if (hostnames == null) throw new IllegalArgumentException("Missing host name");
+        if (nodeName == null) throw new IllegalArgumentException("Missing node name");
+        if (truststoreFilename == null) throw new IllegalArgumentException("Missing truststore filename");
+        if (truststorePassword == null) throw new IllegalArgumentException("Missing truststore password");
+
+        sslContext = SSLContext.getInstance("TLSv1.2");
+        sslContext.init(getKeyManagers(), getTrustManagers(), null);
+
+        // Print parse result
+        System.out.println("------ config ------");
+		for (Option option : options.getOptions()) {
+			String[] values = cmd.getOptionValues(option.getOpt());
+			if (values != null) {
+				for (String value : values) {
+					System.out.println("  " + option.getLongOpt() + " = " + value);
+				}
+			}
+			else {
+				System.out.println("  " + option.getLongOpt() + " = (not specified)");
+			}
+		}
+        System.out.println("--------------------");
+	}	
 }
