@@ -20,7 +20,7 @@ async def future_read_message(ws, future):
     except ConnectionClosed:
         print('Websocket connection closed')
 
-async def subscribe_loop(config, ws_url, topic):
+async def subscribe_loop(config, secret, ws_url, topic):
     ws = WebSocketStomp(ws_url, config.get_node_name(), secret, config.get_ssl_context())
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
@@ -64,4 +64,4 @@ if __name__ == '__main__':
     secret = pxgrid.get_access_secret(pubsub_node_name)['secret']
     ws_url = pubsub_service['properties']['wsUrl']
 
-    asyncio.get_event_loop().run_until_complete(subscribe_loop(config, ws_url, topic))
+    asyncio.get_event_loop().run_until_complete(subscribe_loop(config, secret, ws_url, topic))
