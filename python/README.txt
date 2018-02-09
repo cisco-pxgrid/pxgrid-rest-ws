@@ -13,22 +13,23 @@ The pxGrid python samples demonstrate how to develop pxGrid clients in python.
     - session_query_all.py:                 downloads all current sessions
 
 * Arguments for samples
+  -h, --help            show this help message and exit
   -a HOSTNAME, --hostname HOSTNAME
-                        Host name (multiple ok)
+                        pxGrid controller host name (multiple ok)
   -n NODENAME, --nodename NODENAME
-                        Node name
+                        Client node name
   -w PASSWORD, --password PASSWORD
-                        Password
+                        Password (optional)
   -d DESCRIPTION, --description DESCRIPTION
                         Description (optional)
   -c CLIENTCERT, --clientcert CLIENTCERT
-                        Client certificate chain filename (optional)
+                        Client certificate chain pem filename (optional)
   -k CLIENTKEY, --clientkey CLIENTKEY
                         Client key filename (optional)
   -p CLIENTKEYPASSWORD, --clientkeypassword CLIENTKEYPASSWORD
                         Client key password (optional)
   -s SERVERCERT, --servercert SERVERCERT
-                        Server certificate
+                        Server certificate pem filename
 
 * Generate pxGrid Certificates from ISE:
     - Navigate to ISE Admin GUI via any web browser and login

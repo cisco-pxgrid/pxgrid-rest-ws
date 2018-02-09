@@ -5,14 +5,14 @@ import ssl
 class Config:
     def __init__(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('-a', '--hostname', help='Host name (multiple ok)', action='append')
-        parser.add_argument('-n', '--nodename', help='Node name')
-        parser.add_argument('-w', '--password', help='Password')
+        parser.add_argument('-a', '--hostname', help='pxGrid controller host name (multiple ok)', action='append')
+        parser.add_argument('-n', '--nodename', help='Client node name')
+        parser.add_argument('-w', '--password', help='Password (optional)')
         parser.add_argument('-d', '--description', help='Description (optional)')
-        parser.add_argument('-c', '--clientcert', help='Client certificate chain filename (optional)')
+        parser.add_argument('-c', '--clientcert', help='Client certificate chain pem filename (optional)')
         parser.add_argument('-k', '--clientkey', help='Client key filename (optional)')
         parser.add_argument('-p', '--clientkeypassword', help='Client key password (optional)')
-        parser.add_argument('-s', '--servercert', help='Server certificate')
+        parser.add_argument('-s', '--servercert', help='Server certificate pem filename')
         self.config = parser.parse_args()
 
     def get_host_name(self):
