@@ -99,8 +99,8 @@ public class SampleConfiguration {
 		description = cmd.getOptionValue("d");
 		keystoreFilename = cmd.getOptionValue("k");
 		keystorePassword = cmd.getOptionValue("p");
-		truststoreFilename = cmd.getOptionValue("k");
-		truststorePassword = cmd.getOptionValue("p");
+		truststoreFilename = cmd.getOptionValue("t");
+		truststorePassword = cmd.getOptionValue("q");
        
         if (hostnames == null) throw new IllegalArgumentException("Missing host name");
         if (nodeName == null) throw new IllegalArgumentException("Missing node name");

@@ -31,7 +31,7 @@ public class SessionQueryAll {
 		}
 		
 		Service service = services[0];
-		String url = service.getProperties().get("restBaseURL") + "/getSessions";
+		String url = service.getProperties().get("restBaseUrl") + "/getSessions";
 		logger.info("url={}", url);
 		
 		String secret = https.getAccessSecret(service.getNodeName());
