@@ -2,7 +2,6 @@ package com.cisco.pxgrid.samples.ise;
 
 import java.io.IOException;
 
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,15 +17,22 @@ public class SessionQueryByIP {
 
 	private static void query(SampleConfiguration config, String ip) throws IOException {
 		PxgridControl pxgrid = new PxgridControl(config);
+		
+		// pxGrid ServiceLookup for session service
 		Service[] services = pxgrid.lookupService("com.cisco.ise.session");
 		if (services == null || services.length == 0) {
 			System.out.println("Service unavailabe");
 			return;
 		}
+		
+		// Use first service
 		Service service = services[0];
 		String url = service.getProperties().get("restBaseUrl") + "/getSessionByIpAddress";
 		logger.info("url={}", url);
+		
+		// pxGrid AccessSecret for the node
 		String secret = pxgrid.getAccessSecret(service.getNodeName());
+		
 		String postData = "{\"ipAddress\":\"" + ip + "\"}";
 		SampleHelper.postStringAndPrint(url, config.getNodeName(), secret, config.getSSLContext().getSocketFactory(), postData);
 	}
@@ -37,8 +43,7 @@ public class SessionQueryByIP {
 		try {
 			config.parse(args);
 		} catch (ParseException e) {
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "SessionSubscribe", config.getOptions());
+			config.printHelp("SessionQueryByIP");
 			System.exit(1);
 		}
 
@@ -46,7 +51,7 @@ public class SessionQueryByIP {
 		PxgridControl pxgrid = new PxgridControl(config);
 		while (pxgrid.accountActivate() != AccountState.ENABLED)
 			Thread.sleep(60000);
-		logger.info("pxGrid controller version=" + pxgrid.getControllerVersion());
+		logger.info("pxGrid controller version={}", pxgrid.getControllerVersion());
 
 		while (true) {
 			String ip = SampleHelper.prompt("IP address (or <enter> to disconnect): ");

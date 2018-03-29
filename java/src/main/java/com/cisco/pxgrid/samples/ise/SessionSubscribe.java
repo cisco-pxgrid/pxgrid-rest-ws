@@ -5,7 +5,6 @@ import java.net.URI;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.client.ClientProperties;
@@ -37,8 +36,7 @@ public class SessionSubscribe {
 		try {
 			config.parse(args);
 		} catch (ParseException e) {
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "SessionSubscribe", config.getOptions());
+			config.printHelp("SessionSubscribe");
 			System.exit(1);
 		}
 		
@@ -47,7 +45,7 @@ public class SessionSubscribe {
 		while (control.accountActivate() != AccountState.ENABLED) {
 			Thread.sleep(60000);
 		}
-		logger.info("pxGrid controller version=" + control.getControllerVersion());
+		logger.info("pxGrid controller version={}", control.getControllerVersion());
 
 		// pxGrid ServiceLookup for session service
 		logger.info("Looking up service com.cisco.ise.session");
@@ -57,11 +55,11 @@ public class SessionSubscribe {
 			return;
 		}
 		
-		// Use first service
+		// Use first service. Note that ServiceLookup randomize ordering of services
 		Service sessionService = services[0];
 		String wsPubsubServiceName = sessionService.getProperties().get("wsPubsubService");
 		String sessionTopic = sessionService.getProperties().get("sessionTopic");
-		logger.info("wsPubsubServiceName=" + wsPubsubServiceName + " sessionTopic=" + sessionTopic);
+		logger.info("wsPubsubServiceName={} sessionTopic={}", wsPubsubServiceName, sessionTopic);
 		
 		// pxGrid ServiceLookup for pubsub service
 		services = control.lookupService(wsPubsubServiceName);
@@ -73,7 +71,7 @@ public class SessionSubscribe {
 		// Use first service
 		Service wsPubsubService = services[0];
 		String wsURL = wsPubsubService.getProperties().get("wsUrl");
-		logger.info("wsUrl=" + wsURL);
+		logger.info("wsUrl={}", wsURL);
 
 		// pxGrid get AccessSecret
 		String secret = control.getAccessSecret(wsPubsubService.getNodeName());

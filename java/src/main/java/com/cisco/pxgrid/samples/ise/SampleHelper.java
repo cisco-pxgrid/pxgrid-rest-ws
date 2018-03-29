@@ -6,7 +6,6 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
@@ -29,7 +28,8 @@ import com.google.gson.stream.JsonWriter;
 public class SampleHelper {
 	private static Logger logger = LoggerFactory.getLogger(SampleHelper.class);
 
-	public static HttpsURLConnection createHttpsURLConnection(String url, String user, String password, SSLSocketFactory sslSocketFactory) throws IOException {
+	public static HttpsURLConnection createHttpsURLConnection(String url, String user, String password,
+			SSLSocketFactory sslSocketFactory) throws IOException {
 		URL conn = new URL(url);
 		HttpsURLConnection https = (HttpsURLConnection) conn.openConnection();
 		https.setSSLSocketFactory(sslSocketFactory);
@@ -40,59 +40,60 @@ public class SampleHelper {
 	}
 
 	public static String prompt(String msg) {
-        System.out.print(msg);
-        @SuppressWarnings("resource")
+		System.out.print(msg);
+		@SuppressWarnings("resource")
 		Scanner scanner = new Scanner(System.in);
-        String value = scanner.nextLine();
-        if ("".equals(value)) return null;
-        return value;
-    }
-    
-    public static OffsetDateTime promptDate(String msg) throws ParseException {
-    	String value = prompt(msg);
-    	if (value == null) return null;
-    	return OffsetDateTime.parse(value);
+		String value = scanner.nextLine();
+		if ("".equals(value))
+			return null;
+		return value;
 	}
-	
-	public static void postObjectAndPrint(String url, String user, String password, SSLSocketFactory ssl, Object postObject) throws IOException {
-		Gson gson = new GsonBuilder()
-	            .registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter())
-	            .create();
+
+	public static OffsetDateTime promptDate(String msg) {
+		String value = prompt(msg);
+		if (value == null) return null;
+		return OffsetDateTime.parse(value);
+	}
+
+	public static void postObjectAndPrint(String url, String user, String password, SSLSocketFactory ssl,
+			Object postObject) throws IOException {
+		Gson gson = new GsonBuilder().registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter()).create();
 		postStringAndPrint(url, user, password, ssl, gson.toJson(postObject));
 	}
-	
-	public static void postStringAndPrint(String url, String user, String password, SSLSocketFactory ssl, String postData) throws IOException {
+
+	public static void postStringAndPrint(String url, String user, String password, SSLSocketFactory ssl,
+			String postData) throws IOException {
 		logger.info("postData={}", postData);
 		HttpsURLConnection httpsConn = SampleHelper.createHttpsURLConnection(url, user, password, ssl);
-    	httpsConn.setRequestMethod("POST");
-    	httpsConn.setRequestProperty("Content-Type", "application/json");
-    	httpsConn.setRequestProperty("Accept", "application/json");
-    	httpsConn.setDoInput(true);
-    	httpsConn.setDoOutput(true);
-        
+		httpsConn.setRequestMethod("POST");
+		httpsConn.setRequestProperty("Content-Type", "application/json");
+		httpsConn.setRequestProperty("Accept", "application/json");
+		httpsConn.setDoInput(true);
+		httpsConn.setDoOutput(true);
+
 		OutputStreamWriter osw = new OutputStreamWriter(httpsConn.getOutputStream());
 		osw.write(postData);
 		osw.flush();
 
 		int status = httpsConn.getResponseCode();
-    	logger.info("Response status={}", status);
+		logger.info("Response status={}", status);
 
 		if (status < HttpURLConnection.HTTP_BAD_REQUEST) {
 			try (InputStream in = httpsConn.getInputStream()) {
 				String content = IOUtils.toString(in, StandardCharsets.UTF_8);
-	        	System.out.println("Content: "  + content);
-	        }
-		}
-		else {
+				System.out.println("Content: " + content);
+			}
+		} else {
 			try (InputStream in = httpsConn.getErrorStream()) {
 				String content = IOUtils.toString(in, StandardCharsets.UTF_8);
-	        	System.out.println("Content: "  + content);
-	        }
+				System.out.println("Content: " + content);
+			}
 		}
 	}
-	
+
 	private static class OffsetDateTimeAdapter extends TypeAdapter<OffsetDateTime> {
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
+
 		@Override
 		public void write(JsonWriter out, OffsetDateTime value) throws IOException {
 			if (value == null) {

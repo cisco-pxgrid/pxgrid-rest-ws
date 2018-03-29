@@ -2,7 +2,6 @@ package com.cisco.pxgrid.samples.ise;
 
 import java.time.OffsetDateTime;
 
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,17 +23,22 @@ public class SessionQueryAll {
 		OffsetDateTime startTimestamp = SampleHelper.promptDate("Enter start time (ex. '2015-01-31T13:00:00-07:00' or <enter> for no start time): ");
 		
 		PxgridControl https = new PxgridControl(config);
+		
+		// pxGrid ServiceLookup for session service
 		Service[] services = https.lookupService("com.cisco.ise.session");
 		if (services == null || services.length == 0) {
 			logger.warn("Service unavailabe");
 			return;
 		}
 		
+		// Use first service
 		Service service = services[0];
 		String url = service.getProperties().get("restBaseUrl") + "/getSessions";
 		logger.info("url={}", url);
 		
+		// pxGrid AccesssSecret for the node
 		String secret = https.getAccessSecret(service.getNodeName());
+
 		SessionQueryRequest request = new SessionQueryRequest();
 		request.startTimestamp = startTimestamp;
 		SampleHelper.postObjectAndPrint(url, config.getNodeName(), secret, config.getSSLContext().getSocketFactory(), request);
@@ -46,8 +50,7 @@ public class SessionQueryAll {
 		try {
 			config.parse(args);
 		} catch (ParseException e) {
-			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp( "SessionSubscribe", config.getOptions());
+			config.printHelp("SessionQueryAll");
 			System.exit(1);
 		}
 
@@ -55,7 +58,7 @@ public class SessionQueryAll {
 		PxgridControl control = new PxgridControl(config);
 		while (control.accountActivate() != AccountState.ENABLED)
 			Thread.sleep(60000);
-		logger.info("pxGrid controller version=" + control.getControllerVersion());
+		logger.info("pxGrid controller version={}", control.getControllerVersion());
 
 		downloadUsingAccessSecret(config);
 	}

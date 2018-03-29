@@ -27,54 +27,54 @@ public class StompPubsubClientEndpoint extends Endpoint {
 
 	private volatile Session session;
 	private Map<String, StompSubscription> mapOfIdToSubscription = new ConcurrentHashMap<>();
-	
+
 	public void connect(String hostname) throws IOException {
-    	logger.info("STOMP CONNECT host=" + hostname);
+		logger.info("STOMP CONNECT host={}", hostname);
 		StompFrame message = new StompFrame();
-    	message.setCommand(StompFrame.Command.CONNECT);
-    	message.setHeader("accept-version", "1.2");
-    	message.setHeader("host", hostname);
-    	send(message);
+		message.setCommand(StompFrame.Command.CONNECT);
+		message.setHeader("accept-version", "1.2");
+		message.setHeader("host", hostname);
+		send(message);
 	}
-	
+
 	public void disconnect(String receipt) throws IOException {
-		logger.info("STOMP DISCONNECT receipt=" + receipt);
+		logger.info("STOMP DISCONNECT receipt={}", receipt);
 		StompFrame message = new StompFrame();
-    	message.setCommand(StompFrame.Command.DISCONNECT);
-    	if (receipt != null) {
-    		message.setHeader("receipt", receipt);
-    	}
-    	send(message);
+		message.setCommand(StompFrame.Command.DISCONNECT);
+		if (receipt != null) {
+			message.setHeader("receipt", receipt);
+		}
+		send(message);
 	}
-	
+
 	public void subscribe(StompSubscription subscription) throws IOException {
-		logger.info("STOMP SUBSCRIBE topic=" + subscription.getTopic());
+		logger.info("STOMP SUBSCRIBE topic={}", subscription.getTopic());
 		mapOfIdToSubscription.put(subscription.getId(), subscription);
 		if (session != null) {
 			StompFrame message = subscription.getSubscribeMessage();
-	    	send(message);
+			send(message);
 		}
 	}
 
 	public void publish(String topic, byte[] content) throws IOException {
-		logger.info("STOMP SEND topic=" + topic);
+		logger.info("STOMP SEND topic={}", topic);
 		StompFrame message = new StompFrame();
-    	message.setCommand(StompFrame.Command.SEND);
-    	message.setHeader("destination", topic);
-    	message.setHeader("content-length", Integer.toString(content.length));
-    	message.setContent(content);
-    	send(message);
+		message.setCommand(StompFrame.Command.SEND);
+		message.setHeader("destination", topic);
+		message.setHeader("content-length", Integer.toString(content.length));
+		message.setContent(content);
+		send(message);
 	}
-	
+
 	private void send(StompFrame message) throws IOException {
 		if (session != null) {
-	    	ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	    	message.write(baos);
-	    	// Send as binary
-	    	session.getBasicRemote().sendBinary(ByteBuffer.wrap(baos.toByteArray()));
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			message.write(baos);
+			// Send as binary
+			session.getBasicRemote().sendBinary(ByteBuffer.wrap(baos.toByteArray()));
 		}
 	}
-	
+
 	public void waitForOpen() throws InterruptedException {
 		synchronized (this) {
 			while (session == null) {
@@ -82,7 +82,7 @@ public class StompPubsubClientEndpoint extends Endpoint {
 			}
 		}
 	}
-	
+
 	private void onStompMessage(StompFrame stomp) {
 		switch (stomp.getCommand()) {
 		case CONNECTED:
@@ -110,42 +110,42 @@ public class StompPubsubClientEndpoint extends Endpoint {
 			break;
 		}
 	}
-	
+
 	private class TextHandler implements MessageHandler.Whole<String> {
 		@Override
 		public void onMessage(String message) {
-        	try {
-        		StompFrame stomp = StompFrame.parse(new ByteArrayInputStream(message.getBytes()));
-        		onStompMessage(stomp);
-        	} catch (IOException | ParseException e) {
-        		logger.error("onMessage", e);
-        	}
+			try {
+				StompFrame stomp = StompFrame.parse(new ByteArrayInputStream(message.getBytes()));
+				onStompMessage(stomp);
+			} catch (IOException | ParseException e) {
+				logger.error("onMessage", e);
+			}
 		}
 	}
 
 	private class BinaryHandler implements MessageHandler.Whole<InputStream> {
 		@Override
 		public void onMessage(InputStream in) {
-        	try {
+			try {
 				StompFrame stomp = StompFrame.parse(in);
 				onStompMessage(stomp);
 			} catch (IOException | ParseException e) {
-        		logger.error("onMessage", e);
+				logger.error("onMessage", e);
 			}
 		}
 	}
-	
+
 	@Override
 	public void onOpen(Session session, EndpointConfig cfg) {
 		logger.info("WS onOpen");
 		this.session = session;
 		try {
-	    	session.addMessageHandler(new TextHandler());
-	    	session.addMessageHandler(new BinaryHandler());
+			session.addMessageHandler(new TextHandler());
+			session.addMessageHandler(new BinaryHandler());
 
-        	for (StompSubscription subscription : mapOfIdToSubscription.values()) {
-    			StompFrame message = subscription.getSubscribeMessage();
-					send(message);
+			for (StompSubscription subscription : mapOfIdToSubscription.values()) {
+				StompFrame message = subscription.getSubscribeMessage();
+				send(message);
 			}
 		} catch (IOException e) {
 			logger.error("onOpen", e);
@@ -157,10 +157,11 @@ public class StompPubsubClientEndpoint extends Endpoint {
 
 	@Override
 	public void onClose(Session session, CloseReason closeReason) {
-		logger.info("WS onClose closeReason code={} phrase={}", closeReason.getCloseCode(), closeReason.getReasonPhrase());
+		logger.info("WS onClose closeReason code={} phrase={}", closeReason.getCloseCode(),
+				closeReason.getReasonPhrase());
 		this.session = null;
 	}
-	
+
 	@Override
 	public void onError(Session session, Throwable thr) {
 		logger.info("WS onError thr={}", thr.getMessage());
