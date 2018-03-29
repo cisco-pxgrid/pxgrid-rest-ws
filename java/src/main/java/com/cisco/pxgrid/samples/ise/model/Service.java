@@ -1,4 +1,4 @@
-package com.cisco.pxgrid.model;
+package com.cisco.pxgrid.samples.ise.model;
 
 import java.util.Map;
 

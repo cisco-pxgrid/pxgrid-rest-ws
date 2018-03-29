@@ -3,5 +3,5 @@
  * These can be used for XML or JSON
  */
 @javax.xml.bind.annotation.XmlSchema(namespace="http://www.cisco.com/pxgrid")
-package com.cisco.pxgrid.model;
+package com.cisco.pxgrid.samples.ise.model;
 

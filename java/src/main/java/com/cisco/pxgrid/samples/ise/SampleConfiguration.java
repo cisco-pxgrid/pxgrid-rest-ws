@@ -1,4 +1,4 @@
-package com.cisco.pxgrid.samples.ise.http;
+package com.cisco.pxgrid.samples.ise;
 
 import java.io.FileInputStream;
 import java.io.IOException;

@@ -1,4 +1,4 @@
-package com.cisco.pxgrid.samples.ise.http;
+package com.cisco.pxgrid.samples.ise;
 
 import java.io.IOException;
 
@@ -7,8 +7,8 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cisco.pxgrid.model.AccountState;
-import com.cisco.pxgrid.model.Service;
+import com.cisco.pxgrid.samples.ise.model.AccountState;
+import com.cisco.pxgrid.samples.ise.model.Service;
 
 /**
  * Demonstrates how to query a session using IP address

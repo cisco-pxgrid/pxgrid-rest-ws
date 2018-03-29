@@ -1,4 +1,4 @@
-package com.cisco.pxgrid.samples.ise.http;
+package com.cisco.pxgrid.samples.ise;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,21 +14,21 @@ import javax.net.ssl.SSLSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cisco.pxgrid.model.AccessSecretRequest;
-import com.cisco.pxgrid.model.AccessSecretResponse;
-import com.cisco.pxgrid.model.AccountActivateRequest;
-import com.cisco.pxgrid.model.AccountActivateResponse;
-import com.cisco.pxgrid.model.AccountCreateRequest;
-import com.cisco.pxgrid.model.AccountCreateResponse;
-import com.cisco.pxgrid.model.AccountState;
-import com.cisco.pxgrid.model.Authorization;
-import com.cisco.pxgrid.model.AuthorizationRequest;
-import com.cisco.pxgrid.model.AuthorizationResponse;
-import com.cisco.pxgrid.model.Service;
-import com.cisco.pxgrid.model.ServiceLookupRequest;
-import com.cisco.pxgrid.model.ServiceLookupResponse;
-import com.cisco.pxgrid.model.ServiceRegisterRequest;
-import com.cisco.pxgrid.model.ServiceRegisterResponse;
+import com.cisco.pxgrid.samples.ise.model.AccessSecretRequest;
+import com.cisco.pxgrid.samples.ise.model.AccessSecretResponse;
+import com.cisco.pxgrid.samples.ise.model.AccountActivateRequest;
+import com.cisco.pxgrid.samples.ise.model.AccountActivateResponse;
+import com.cisco.pxgrid.samples.ise.model.AccountCreateRequest;
+import com.cisco.pxgrid.samples.ise.model.AccountCreateResponse;
+import com.cisco.pxgrid.samples.ise.model.AccountState;
+import com.cisco.pxgrid.samples.ise.model.Authorization;
+import com.cisco.pxgrid.samples.ise.model.AuthorizationRequest;
+import com.cisco.pxgrid.samples.ise.model.AuthorizationResponse;
+import com.cisco.pxgrid.samples.ise.model.Service;
+import com.cisco.pxgrid.samples.ise.model.ServiceLookupRequest;
+import com.cisco.pxgrid.samples.ise.model.ServiceLookupResponse;
+import com.cisco.pxgrid.samples.ise.model.ServiceRegisterRequest;
+import com.cisco.pxgrid.samples.ise.model.ServiceRegisterResponse;
 import com.google.gson.Gson;
 
 /**

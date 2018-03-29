@@ -1,4 +1,4 @@
-package com.cisco.pxgrid.samples.ise.http;
+package com.cisco.pxgrid.samples.ise;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -19,7 +19,7 @@ import javax.websocket.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.cisco.pxgrid.samples.ise.http.StompSubscription.Handler;
+import com.cisco.pxgrid.samples.ise.StompSubscription.Handler;
 
 @ClientEndpoint
 public class StompPubsubClientEndpoint extends Endpoint {
