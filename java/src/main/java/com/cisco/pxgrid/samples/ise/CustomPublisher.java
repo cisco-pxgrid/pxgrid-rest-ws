@@ -1,9 +1,16 @@
 package com.cisco.pxgrid.samples.ise;
 
+import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
+import javax.websocket.Session;
 
 import org.apache.commons.cli.ParseException;
 import org.glassfish.tyrus.client.ClientManager;
@@ -15,20 +22,13 @@ import org.slf4j.LoggerFactory;
 
 import com.cisco.pxgrid.samples.ise.model.AccountState;
 import com.cisco.pxgrid.samples.ise.model.Service;
+import com.cisco.pxgrid.samples.ise.model.ServiceRegisterResponse;
 
 /**
- * Demonstrates how to subscribe using REST/WS
+ * Sample custom service that publishes data
  */
-public class SessionSubscribe {
-	private static Logger logger = LoggerFactory.getLogger(SessionSubscribe.class);
-
-	// Subscribe handler class
-	private static class SessionHandler implements StompSubscription.Handler {
-		@Override
-		public void handle(StompFrame message) {
-			logger.info("Content={}", new String(message.getContent()));
-		}
-	}
+public class CustomPublisher {
+	private static Logger logger = LoggerFactory.getLogger(CustomPublisher.class);
 
 	public static void main(String[] args) throws Exception {
 		// Parse arguments
@@ -36,10 +36,10 @@ public class SessionSubscribe {
 		try {
 			config.parse(args);
 		} catch (ParseException e) {
-			config.printHelp("SessionSubscribe");
+			config.printHelp("CustomPublisher");
 			System.exit(1);
 		}
-		
+
 		// AccountActivate
 		PxgridControl control = new PxgridControl(config);
 		while (control.accountActivate() != AccountState.ENABLED) {
@@ -47,21 +47,26 @@ public class SessionSubscribe {
 		}
 		logger.info("pxGrid controller version={}", control.getControllerVersion());
 
-		// pxGrid ServiceLookup for session service
-		Service[] services = control.lookupService("com.cisco.ise.session");
-		if (services.length == 0) {
-			logger.info("Session service unavailabe");
-			return;
-		}
-		
-		// Use first service. Note that ServiceLookup randomize ordering of services
-		Service sessionService = services[0];
-		String wsPubsubServiceName = sessionService.getProperties().get("wsPubsubService");
-		String sessionTopic = sessionService.getProperties().get("sessionTopic");
-		logger.info("wsPubsubServiceName={} sessionTopic={}", wsPubsubServiceName, sessionTopic);
-		
+		// pxGrid ServiceRegistration
+		Map<String, String> sessionProperties = new HashMap<>();
+		sessionProperties.put("wsPubsubService", "com.cisco.ise.pubsub");
+		sessionProperties.put("customTopic", "/topic/com.example.custom");
+		ServiceRegisterResponse response = control.registerService("com.example.custom", sessionProperties);
+		String registrationId = response.getId();
+		long reregisterTimeMillis = response.getReregisterTimeMillis();
+
+		// Schedule pxGrid ServiceReregistration
+		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+		ScheduledFuture<?> reregisterHandle = executor.scheduleWithFixedDelay(() -> {
+			try {
+				control.reregisterService(registrationId);
+			} catch (IOException e) {
+				logger.error("Reregister failure");
+			}
+		}, reregisterTimeMillis, reregisterTimeMillis, TimeUnit.MILLISECONDS);
+
 		// pxGrid ServiceLookup for pubsub service
-		services = control.lookupService(wsPubsubServiceName);
+		Service[] services = control.lookupService("com.cisco.ise.pubsub");
 		if (services.length == 0) {
 			logger.info("Pubsub service unavailabe");
 			return;
@@ -72,10 +77,10 @@ public class SessionSubscribe {
 		String wsURL = wsPubsubService.getProperties().get("wsUrl");
 		logger.info("wsUrl={}", wsURL);
 
-		// pxGrid get AccessSecret
+		// pxGrid AccessSecret
 		String secret = control.getAccessSecret(wsPubsubService.getNodeName());
 
-		// WebSocket config
+		// Setup WebSocket client
 		ClientManager client = ClientManager.createClient();
 		SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(config.getSSLContext());
 		// Ignore hostname verification
@@ -83,26 +88,35 @@ public class SessionSubscribe {
 		client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
 		client.getProperties().put(ClientProperties.CREDENTIALS,
 				new Credentials(config.getNodeName(), secret.getBytes()));
-		
+
 		// WebSocket connect
 		StompPubsubClientEndpoint endpoint = new StompPubsubClientEndpoint();
+
+		// get URI, connect pxGrid client to the pxGrid server so that we can publish to
+		// dynamic service
 		URI uri = new URI(wsURL);
-		javax.websocket.Session session = client.connectToServer(endpoint, uri);
+		Session session = client.connectToServer(endpoint, uri);
 
 		// STOMP connect
 		endpoint.connect(uri.getHost());
-		
-		// Subscribe
-		StompSubscription subscription = new StompSubscription(sessionTopic, new SessionHandler());
-		endpoint.subscribe(subscription);
+
+		// Give time for connection to establish before prompt
+		Thread.sleep(1000);
+		SampleHelper.prompt("press <enter> to publish...");
+
+		endpoint.publish("/topic/com.example.custom", "custom data".getBytes());
 
 		SampleHelper.prompt("press <enter> to disconnect...");
+
+		// Stop reregistration
+		reregisterHandle.cancel(true);
+		executor.shutdown();
 
 		// STOMP disconnect
 		endpoint.disconnect("ID-123");
 		// Wait for disconnect receipt
 		Thread.sleep(3000);
-		
+
 		session.close();
 	}
 }

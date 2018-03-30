@@ -2,8 +2,8 @@ package com.cisco.pxgrid.samples.ise;
 
 import java.net.URI;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
+import javax.websocket.Session;
 
 import org.apache.commons.cli.ParseException;
 import org.glassfish.tyrus.client.ClientManager;
@@ -17,26 +17,26 @@ import com.cisco.pxgrid.samples.ise.model.AccountState;
 import com.cisco.pxgrid.samples.ise.model.Service;
 
 /**
- * Demonstrates how to subscribe using REST/WS
+ * Demonstrates how to subscribe to a topic in a custom service
  */
-public class SessionSubscribe {
-	private static Logger logger = LoggerFactory.getLogger(SessionSubscribe.class);
+public class CustomSubscriber {
+	private static Logger logger = LoggerFactory.getLogger(CustomPublisher.class);
 
 	// Subscribe handler class
-	private static class SessionHandler implements StompSubscription.Handler {
+	private static class MessageHandler implements StompSubscription.Handler {
 		@Override
 		public void handle(StompFrame message) {
-			logger.info("Content={}", new String(message.getContent()));
+			System.out.println(new String(message.getContent()));
 		}
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String [] args) throws Exception {
 		// Parse arguments
 		SampleConfiguration config = new SampleConfiguration();
 		try {
 			config.parse(args);
 		} catch (ParseException e) {
-			config.printHelp("SessionSubscribe");
+			config.printHelp("CustomSubscriber");
 			System.exit(1);
 		}
 		
@@ -46,19 +46,20 @@ public class SessionSubscribe {
 			Thread.sleep(60000);
 		}
 		logger.info("pxGrid controller version={}", control.getControllerVersion());
-
-		// pxGrid ServiceLookup for session service
-		Service[] services = control.lookupService("com.cisco.ise.session");
+		
+		
+		// pxGrid ServiceLookup for custom service
+		Service[] services = control.lookupService("com.example.custom");
 		if (services.length == 0) {
-			logger.info("Session service unavailabe");
+			logger.info("Service unavailabe");
 			return;
 		}
 		
 		// Use first service. Note that ServiceLookup randomize ordering of services
-		Service sessionService = services[0];
-		String wsPubsubServiceName = sessionService.getProperties().get("wsPubsubService");
-		String sessionTopic = sessionService.getProperties().get("sessionTopic");
-		logger.info("wsPubsubServiceName={} sessionTopic={}", wsPubsubServiceName, sessionTopic);
+		Service customService = services[0];
+		String wsPubsubServiceName = customService.getProperties().get("wsPubsubService");
+		String customTopic = customService.getProperties().get("customTopic");
+		logger.info("wsPubsubServiceName={} sessionTopic={}", wsPubsubServiceName, customTopic);
 		
 		// pxGrid ServiceLookup for pubsub service
 		services = control.lookupService(wsPubsubServiceName);
@@ -72,7 +73,7 @@ public class SessionSubscribe {
 		String wsURL = wsPubsubService.getProperties().get("wsUrl");
 		logger.info("wsUrl={}", wsURL);
 
-		// pxGrid get AccessSecret
+		// pxGrid AccessSecret for the pubsub node
 		String secret = control.getAccessSecret(wsPubsubService.getNodeName());
 
 		// WebSocket config
@@ -87,13 +88,13 @@ public class SessionSubscribe {
 		// WebSocket connect
 		StompPubsubClientEndpoint endpoint = new StompPubsubClientEndpoint();
 		URI uri = new URI(wsURL);
-		javax.websocket.Session session = client.connectToServer(endpoint, uri);
+		Session session = client.connectToServer(endpoint, uri);
 
 		// STOMP connect
 		endpoint.connect(uri.getHost());
 		
 		// Subscribe
-		StompSubscription subscription = new StompSubscription(sessionTopic, new SessionHandler());
+		StompSubscription subscription = new StompSubscription(customTopic, new MessageHandler());
 		endpoint.subscribe(subscription);
 
 		SampleHelper.prompt("press <enter> to disconnect...");

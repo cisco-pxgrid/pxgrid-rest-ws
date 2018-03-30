@@ -3,12 +3,12 @@ package com.cisco.pxgrid.samples.ise.model;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * The request to unregister a service on the controller.
+ * The request to reregister a service on the controller.
  * 
  * @since 2.0
  */
 @XmlRootElement
-public class ServiceUnregisterRequest {
+public class ServiceReregisterRequest {
 	private String id;
 	
 	public String getId() {
