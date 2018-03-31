@@ -2,7 +2,6 @@ package com.cisco.pxgrid.samples.ise;
 
 import java.net.URI;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
 import org.apache.commons.cli.ParseException;
@@ -75,6 +74,7 @@ public class SessionSubscribe {
 		// pxGrid get AccessSecret
 		String secret = control.getAccessSecret(wsPubsubService.getNodeName());
 
+
 		// WebSocket config
 		ClientManager client = ClientManager.createClient();
 		SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(config.getSSLContext());
@@ -96,6 +96,8 @@ public class SessionSubscribe {
 		StompSubscription subscription = new StompSubscription(sessionTopic, new SessionHandler());
 		endpoint.subscribe(subscription);
 
+		// Give time for connection to establish before prompt
+		Thread.sleep(1000);
 		SampleHelper.prompt("press <enter> to disconnect...");
 
 		// STOMP disconnect
@@ -103,6 +105,7 @@ public class SessionSubscribe {
 		// Wait for disconnect receipt
 		Thread.sleep(3000);
 		
+		// Websocket close
 		session.close();
 	}
 }

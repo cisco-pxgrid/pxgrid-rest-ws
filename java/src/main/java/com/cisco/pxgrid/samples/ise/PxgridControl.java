@@ -30,6 +30,8 @@ import com.cisco.pxgrid.samples.ise.model.ServiceRegisterRequest;
 import com.cisco.pxgrid.samples.ise.model.ServiceRegisterResponse;
 import com.cisco.pxgrid.samples.ise.model.ServiceReregisterRequest;
 import com.cisco.pxgrid.samples.ise.model.ServiceReregisterResponse;
+import com.cisco.pxgrid.samples.ise.model.ServiceUnregisterRequest;
+import com.cisco.pxgrid.samples.ise.model.ServiceUnregisterResponse;
 import com.google.gson.Gson;
 
 /**
@@ -118,6 +120,13 @@ public class PxgridControl {
 		ServiceReregisterRequest request = new ServiceReregisterRequest();
 		request.setId(id);
 		sendRequest(https, request, ServiceReregisterResponse.class);
+	}
+	
+	public void unregisterService(String id) throws IOException {
+		HttpsURLConnection https = getHttpsURLConnection("ServiceUnregister");
+		ServiceUnregisterRequest request = new ServiceUnregisterRequest();
+		request.setId(id);
+		sendRequest(https, request, ServiceUnregisterResponse.class);
 	}
 
 	public Service[] lookupService(String name) throws IOException {

@@ -26,11 +26,15 @@ import com.cisco.pxgrid.samples.ise.model.ServiceRegisterResponse;
 
 /**
  * Sample custom service that publishes data
+ * 
+ * This application register a custom service with properties for pubsub communication.
  */
 public class CustomPublisher {
 	private static Logger logger = LoggerFactory.getLogger(CustomPublisher.class);
 
 	public static void main(String[] args) throws Exception {
+		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+
 		// Parse arguments
 		SampleConfiguration config = new SampleConfiguration();
 		try {
@@ -56,8 +60,7 @@ public class CustomPublisher {
 		long reregisterTimeMillis = response.getReregisterTimeMillis();
 
 		// Schedule pxGrid ServiceReregistration
-		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-		ScheduledFuture<?> reregisterHandle = executor.scheduleWithFixedDelay(() -> {
+		executor.scheduleWithFixedDelay(() -> {
 			try {
 				control.reregisterService(registrationId);
 			} catch (IOException e) {
@@ -71,7 +74,6 @@ public class CustomPublisher {
 			logger.info("Pubsub service unavailabe");
 			return;
 		}
-
 		// Use first service
 		Service wsPubsubService = services[0];
 		String wsURL = wsPubsubService.getProperties().get("wsUrl");
@@ -91,32 +93,36 @@ public class CustomPublisher {
 
 		// WebSocket connect
 		StompPubsubClientEndpoint endpoint = new StompPubsubClientEndpoint();
-
-		// get URI, connect pxGrid client to the pxGrid server so that we can publish to
-		// dynamic service
 		URI uri = new URI(wsURL);
 		Session session = client.connectToServer(endpoint, uri);
 
 		// STOMP connect
 		endpoint.connect(uri.getHost());
 
-		// Give time for connection to establish before prompt
-		Thread.sleep(1000);
-		SampleHelper.prompt("press <enter> to publish...");
-
-		endpoint.publish("/topic/com.example.custom", "custom data".getBytes());
+		// STOMP send periodically
+		executor.scheduleWithFixedDelay(() -> {
+			try {
+				endpoint.publish("/topic/com.example.custom", "custom data".getBytes());
+			} catch (IOException e) {
+				logger.error("Publish failure");
+			}
+		}, 0, 5, TimeUnit.SECONDS);
 
 		SampleHelper.prompt("press <enter> to disconnect...");
 
-		// Stop reregistration
-		reregisterHandle.cancel(true);
+		// pxGrid ServerUnregister
+		control.unregisterService(registrationId);
+		
+		// Stop executor
 		executor.shutdown();
+		executor.awaitTermination(5, TimeUnit.SECONDS);
 
 		// STOMP disconnect
 		endpoint.disconnect("ID-123");
 		// Wait for disconnect receipt
 		Thread.sleep(3000);
 
+		// Websocket close
 		session.close();
 	}
 }

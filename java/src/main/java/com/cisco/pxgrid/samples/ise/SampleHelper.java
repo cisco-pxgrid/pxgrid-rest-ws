@@ -40,7 +40,7 @@ public class SampleHelper {
 	}
 
 	public static String prompt(String msg) {
-		System.out.print(msg);
+		System.out.println(msg);
 		@SuppressWarnings("resource")
 		Scanner scanner = new Scanner(System.in);
 		String value = scanner.nextLine();
