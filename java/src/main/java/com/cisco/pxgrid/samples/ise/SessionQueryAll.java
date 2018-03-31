@@ -10,7 +10,7 @@ import com.cisco.pxgrid.samples.ise.model.AccountState;
 import com.cisco.pxgrid.samples.ise.model.Service;
 
 /**
- * Demonstrates how to use query all sessions from ISE
+ * Demonstrates how to query all sessions from ISE Session Directory service
  */
 public class SessionQueryAll {
 	private static Logger logger = LoggerFactory.getLogger(SessionQueryAll.class);
@@ -25,7 +25,7 @@ public class SessionQueryAll {
 		PxgridControl https = new PxgridControl(config);
 		
 		// pxGrid ServiceLookup for session service
-		Service[] services = https.lookupService("com.cisco.ise.session");
+		Service[] services = https.serviceLookup("com.cisco.ise.session");
 		if (services == null || services.length == 0) {
 			logger.warn("Service unavailabe");
 			return;

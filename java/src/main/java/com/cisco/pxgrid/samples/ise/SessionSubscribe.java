@@ -16,7 +16,7 @@ import com.cisco.pxgrid.samples.ise.model.AccountState;
 import com.cisco.pxgrid.samples.ise.model.Service;
 
 /**
- * Demonstrates how to subscribe using REST/WS
+ * Demonstrates how to subscribe to ISE SessionDirectory
  */
 public class SessionSubscribe {
 	private static Logger logger = LoggerFactory.getLogger(SessionSubscribe.class);
@@ -47,7 +47,7 @@ public class SessionSubscribe {
 		logger.info("pxGrid controller version={}", control.getControllerVersion());
 
 		// pxGrid ServiceLookup for session service
-		Service[] services = control.lookupService("com.cisco.ise.session");
+		Service[] services = control.serviceLookup("com.cisco.ise.session");
 		if (services.length == 0) {
 			logger.info("Session service unavailabe");
 			return;
@@ -60,7 +60,7 @@ public class SessionSubscribe {
 		logger.info("wsPubsubServiceName={} sessionTopic={}", wsPubsubServiceName, sessionTopic);
 		
 		// pxGrid ServiceLookup for pubsub service
-		services = control.lookupService(wsPubsubServiceName);
+		services = control.serviceLookup(wsPubsubServiceName);
 		if (services.length == 0) {
 			logger.info("Pubsub service unavailabe");
 			return;

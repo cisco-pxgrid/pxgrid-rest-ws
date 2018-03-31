@@ -10,7 +10,7 @@ import com.cisco.pxgrid.samples.ise.model.AccountState;
 import com.cisco.pxgrid.samples.ise.model.Service;
 
 /**
- * Demonstrates how to query a session using IP address
+ * Demonstrates how to query session by IP from ISE Session Directory service
  */
 public class SessionQueryByIP {
 	private static Logger logger = LoggerFactory.getLogger(SessionQueryByIP.class);
@@ -19,7 +19,7 @@ public class SessionQueryByIP {
 		PxgridControl pxgrid = new PxgridControl(config);
 		
 		// pxGrid ServiceLookup for session service
-		Service[] services = pxgrid.lookupService("com.cisco.ise.session");
+		Service[] services = pxgrid.serviceLookup("com.cisco.ise.session");
 		if (services == null || services.length == 0) {
 			System.out.println("Service unavailabe");
 			return;

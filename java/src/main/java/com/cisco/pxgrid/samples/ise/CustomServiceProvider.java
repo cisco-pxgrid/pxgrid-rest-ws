@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLSession;
@@ -25,12 +24,22 @@ import com.cisco.pxgrid.samples.ise.model.Service;
 import com.cisco.pxgrid.samples.ise.model.ServiceRegisterResponse;
 
 /**
- * Sample custom service that publishes data
+ * Demonstrate how to create a custom service that publishes data
  * 
- * This application register a custom service with properties for pubsub communication.
+ * The flow of the application is as follows:
+ * 1. Parse arguments for configurations
+ * 2. Activate Account. This will then require ISE Admin to approve this new node.
+ * 3. pxGrid ServiceRegister to register the new custom service
+ * 4. Schedule periodic pxGrid ServiceReregister to signify the service is still alive
+ * 5. pxGrid ServiceLookup for ISE pubsub service
+ * 6. pxGrid get AccessSecret for the ISE pubsub node
+ * 7. Establish WebSocket connection with the ISE pubsub node
+ * 8. Establish STOMP connection for pubsub messaging
+ * 9. Schedule periodic publish of data
+ * 10. Wait for keyboard input for stopping the application
  */
-public class CustomPublisher {
-	private static Logger logger = LoggerFactory.getLogger(CustomPublisher.class);
+public class CustomServiceProvider {
+	private static Logger logger = LoggerFactory.getLogger(CustomServiceProvider.class);
 
 	public static void main(String[] args) throws Exception {
 		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -40,7 +49,7 @@ public class CustomPublisher {
 		try {
 			config.parse(args);
 		} catch (ParseException e) {
-			config.printHelp("CustomPublisher");
+			config.printHelp("CustomServiceProvider");
 			System.exit(1);
 		}
 
@@ -51,25 +60,25 @@ public class CustomPublisher {
 		}
 		logger.info("pxGrid controller version={}", control.getControllerVersion());
 
-		// pxGrid ServiceRegistration
+		// pxGrid ServiceRegister
 		Map<String, String> sessionProperties = new HashMap<>();
 		sessionProperties.put("wsPubsubService", "com.cisco.ise.pubsub");
 		sessionProperties.put("customTopic", "/topic/com.example.custom");
-		ServiceRegisterResponse response = control.registerService("com.example.custom", sessionProperties);
+		ServiceRegisterResponse response = control.serviceRegister("com.example.custom", sessionProperties);
 		String registrationId = response.getId();
 		long reregisterTimeMillis = response.getReregisterTimeMillis();
 
-		// Schedule pxGrid ServiceReregistration
+		// Schedule pxGrid ServiceReregister
 		executor.scheduleWithFixedDelay(() -> {
 			try {
-				control.reregisterService(registrationId);
+				control.serviceReregister(registrationId);
 			} catch (IOException e) {
 				logger.error("Reregister failure");
 			}
 		}, reregisterTimeMillis, reregisterTimeMillis, TimeUnit.MILLISECONDS);
 
 		// pxGrid ServiceLookup for pubsub service
-		Service[] services = control.lookupService("com.cisco.ise.pubsub");
+		Service[] services = control.serviceLookup("com.cisco.ise.pubsub");
 		if (services.length == 0) {
 			logger.info("Pubsub service unavailabe");
 			return;

@@ -17,10 +17,21 @@ import com.cisco.pxgrid.samples.ise.model.AccountState;
 import com.cisco.pxgrid.samples.ise.model.Service;
 
 /**
- * Demonstrates how to subscribe to a topic in a custom service
+ * Demonstrates how to subscribe a topic from a custom service
+ * 
+ * The flow of the application is as follows:
+ * 1. Parse arguments for configurations
+ * 2. Activate Account. This will then require ISE Admin to approve this new node.
+ * 3. pxGrid ServiceLookup for the custom service
+ * 4. pxGrid ServiceLookup for ISE pubsub service
+ * 5. pxGrid get AccessSecret for the ISE pubsub node
+ * 6. Establish WebSocket connection with the ISE pubsub node
+ * 7. Establish STOMP connection for pubsub messaging
+ * 8. Subscribe to the topic in the custom service
+ * 9. Wait for keyboard input for stopping the application
  */
-public class CustomSubscriber {
-	private static Logger logger = LoggerFactory.getLogger(CustomPublisher.class);
+public class CustomServiceConsumer {
+	private static Logger logger = LoggerFactory.getLogger(CustomServiceProvider.class);
 
 	// Subscribe handler class
 	private static class MessageHandler implements StompSubscription.Handler {
@@ -36,7 +47,7 @@ public class CustomSubscriber {
 		try {
 			config.parse(args);
 		} catch (ParseException e) {
-			config.printHelp("CustomSubscriber");
+			config.printHelp("CustomServiceConsumer");
 			System.exit(1);
 		}
 		
@@ -49,7 +60,7 @@ public class CustomSubscriber {
 		
 		
 		// pxGrid ServiceLookup for custom service
-		Service[] services = control.lookupService("com.example.custom");
+		Service[] services = control.serviceLookup("com.example.custom");
 		if (services.length == 0) {
 			logger.info("Service unavailabe");
 			return;
@@ -62,7 +73,7 @@ public class CustomSubscriber {
 		logger.info("wsPubsubServiceName={} sessionTopic={}", wsPubsubServiceName, customTopic);
 		
 		// pxGrid ServiceLookup for pubsub service
-		services = control.lookupService(wsPubsubServiceName);
+		services = control.serviceLookup(wsPubsubServiceName);
 		if (services.length == 0) {
 			logger.info("Pubsub service unavailabe");
 			return;

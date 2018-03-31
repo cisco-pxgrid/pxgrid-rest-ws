@@ -107,7 +107,7 @@ public class PxgridControl {
 		return response.getAccountState();
 	}
 
-	public ServiceRegisterResponse registerService(String name, Map<String, String> properties) throws IOException {
+	public ServiceRegisterResponse serviceRegister(String name, Map<String, String> properties) throws IOException {
 		HttpsURLConnection https = getHttpsURLConnection("ServiceRegister");
 		ServiceRegisterRequest request = new ServiceRegisterRequest();
 		request.setName(name);
@@ -115,7 +115,7 @@ public class PxgridControl {
 		return sendRequest(https, request, ServiceRegisterResponse.class);
 	}
 	
-	public void reregisterService(String id) throws IOException {
+	public void serviceReregister(String id) throws IOException {
 		HttpsURLConnection https = getHttpsURLConnection("ServiceReregister");
 		ServiceReregisterRequest request = new ServiceReregisterRequest();
 		request.setId(id);
@@ -129,7 +129,7 @@ public class PxgridControl {
 		sendRequest(https, request, ServiceUnregisterResponse.class);
 	}
 
-	public Service[] lookupService(String name) throws IOException {
+	public Service[] serviceLookup(String name) throws IOException {
 		HttpsURLConnection https = getHttpsURLConnection("ServiceLookup");
 		ServiceLookupRequest request = new ServiceLookupRequest();
 		request.setName(name);
