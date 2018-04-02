@@ -51,15 +51,19 @@ public class PxgridControl {
 		https.setRequestProperty("Accept", "application/json");
 
 		Gson gson = new Gson();
-
+		
+		// Getting urlSuffix for logging purpose
+		String path = https.getURL().getPath();
+		String urlSuffix = path.substring(path.lastIndexOf('/') + 1);
+		logger.info("{} request={}", urlSuffix, gson.toJson(request));
+		
 		OutputStreamWriter out = new OutputStreamWriter(https.getOutputStream());
-		logger.info("Request={}", gson.toJson(request));
 		gson.toJson(request, out);
 		out.flush();
-
 		InputStreamReader in = new InputStreamReader(https.getInputStream());
 		T response = gson.fromJson(in, responseClass);
-		logger.info("Response={}", gson.toJson(response));
+		
+		logger.info("{} response={}", urlSuffix, gson.toJson(response));
 
 		return response;
 	}
