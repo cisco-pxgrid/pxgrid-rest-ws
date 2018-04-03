@@ -2,8 +2,6 @@ package com.cisco.pxgrid.samples.ise;
 
 import java.net.URI;
 
-import javax.net.ssl.SSLSession;
-
 import org.apache.commons.cli.ParseException;
 import org.glassfish.tyrus.client.ClientManager;
 import org.glassfish.tyrus.client.ClientProperties;

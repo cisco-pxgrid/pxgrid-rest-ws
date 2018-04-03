@@ -8,7 +8,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLSession;
 import javax.websocket.Session;
 
 import org.apache.commons.cli.ParseException;

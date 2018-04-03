@@ -69,7 +69,7 @@ public class SampleConfiguration {
     
     private KeyManager[] getKeyManagers() throws IOException, GeneralSecurityException {
         if (keystoreFilename == null) {
-        		return null;
+        	return null;
         }
 		KeyStore ks = KeyStore.getInstance("JKS");
         FileInputStream in = new FileInputStream(keystoreFilename);
