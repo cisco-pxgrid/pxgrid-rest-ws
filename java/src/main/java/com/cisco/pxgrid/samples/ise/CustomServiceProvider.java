@@ -94,8 +94,6 @@ public class CustomServiceProvider {
 		// Setup WebSocket client
 		ClientManager client = ClientManager.createClient();
 		SslEngineConfigurator sslEngineConfigurator = new SslEngineConfigurator(config.getSSLContext());
-		// Ignore hostname verification
-		sslEngineConfigurator.setHostnameVerifier((String hostname, SSLSession session) -> true);
 		client.getProperties().put(ClientProperties.SSL_ENGINE_CONFIGURATOR, sslEngineConfigurator);
 		client.getProperties().put(ClientProperties.CREDENTIALS,
 				new Credentials(config.getNodeName(), secret.getBytes()));

@@ -81,8 +81,6 @@ public class PxgridControl {
 		String userPassword = config.getNodeName() + ":" + config.getPassword();
 		String encoded = Base64.getEncoder().encodeToString(userPassword.getBytes());
 		https.setRequestProperty("Authorization", "Basic " + encoded);
-		// Ignore hostname verification
-		https.setHostnameVerifier((String hostname, SSLSession session) -> true);
 		https.setDoInput(true);
 		https.setDoOutput(true);
 
