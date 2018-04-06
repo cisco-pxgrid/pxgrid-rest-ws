@@ -1,34 +1,38 @@
 package main
 
 import (
-		"encoding/json"
-        "strings"
-        "io/ioutil"
-	    "net/http"
-        "crypto/tls"
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"strings"
 )
 
 type Service struct {
-    Name string `json:"name"`
-    NodeName string `json:"nodeName"`
-    Properties map[string]string `json:"properties"`
+	Name       string            `json:"name"`
+	NodeName   string            `json:"nodeName"`
+	Properties map[string]string `json:"properties"`
+}
+
+type AccountActivateRequest struct {
 }
 
 type AccountActivateResponse struct {
-    AccountState string `json:"accountState"`
-    Version string `json:"version"`
+	AccountState string `json:"accountState"`
+	Version      string `json:"version"`
 }
 
 type ServiceLookupRequest struct {
-    Name string `json:"name"`
+	Name string `json:"name"`
 }
 
 type ServiceLookupResponse struct {
-    Services []Service `json:"services"`
+	Services []Service `json:"services"`
 }
 
 type AccessSecretRequest struct {
-    PeerNodeName string `json:"peerNodeName"`
+	PeerNodeName string `json:"peerNodeName"`
 }
 
 type AccessSecretResponse struct {
@@ -36,125 +40,89 @@ type AccessSecretResponse struct {
 }
 
 type Control struct {
+	config Config
 	client *http.Client
-	user string
-	host string
-} 
+}
 
-func InitControl(tlsConfig *tls.Config, host, user string) (control *Control) {
-	transport := &http.Transport{ 
-		TLSClientConfig: tlsConfig, 
-		Dial: TimeoutDialer(), 
+// func InitControl(tlsConfig *tls.Config, host, user string) (control *Control) {
+func NewControl(config Config) (control *Control, err error) {
+	tlsConfig, err := config.GetTLSConfig()
+	if err != nil {
+		return
 	}
-	
-	control = &Control { 
-		client: &http.Client{ Transport: transport, },
-		user: user,
-		host: host,
+	transport := &http.Transport{
+		TLSClientConfig: tlsConfig,
+		Dial:            TimeoutDialer(),
 	}
-	
+	control = &Control{
+		config: config,
+		client: &http.Client{Transport: transport},
+	}
 	return
 }
 
+func (control *Control) sendRequest(url string, request interface{}, response interface{}) (err error) {
+	requestBytes, err := json.Marshal(request)
+	if err != nil {
+		return
+	}
+	// For logging purpose
+	slashIndex := strings.LastIndex(url, "/")
+	urlSuffix := url[slashIndex+1:]
+	log.Println(urlSuffix + " request=" + string(requestBytes[:]))
 
-func (control *Control) AccountActivate()(res *AccountActivateResponse, err error) {		
-    url := "https://" + control.host + ":8910/pxgrid/control/AccountActivate"
-    var req *http.Request
-   
-    req, err = http.NewRequest("POST", url, strings.NewReader("{}"))
-    
-    if err != nil {
-            return
-    }
-    
-    req.Header.Add("Content-Type", "application/json")
-    req.Header.Add("Accept", "application/json")
-    req.SetBasicAuth(control.user, "")
-    resp, err := control.client.Do(req)
-    
-    if err != nil {
-	    	return
-    }
-
-    defer resp.Body.Close()
-
-    data, err := ioutil.ReadAll(resp.Body)
-    
-    if err != nil {
-	    	return
-    }
-
-    res = &AccountActivateResponse{}
-    json.Unmarshal(data, res)
-    return
+	req, err := http.NewRequest("POST", url, bytes.NewReader(requestBytes))
+	if err != nil {
+		return
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Accept", "application/json")
+	req.SetBasicAuth(*control.config.nodeName, "")
+	resp, err := control.client.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	responseBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	log.Println(urlSuffix + " response=" + string(responseBytes[:]))
+	err = json.Unmarshal(responseBytes, response)
+	if err != nil {
+		return
+	}
+	return
 }
 
-func (control *Control) LookupService(serviceName string)(services []Service, err error) {
-    url := "https://" + control.host + ":8910/pxgrid/control/ServiceLookup"
-    lookupRequest, _ := json.Marshal(ServiceLookupRequest{ serviceName })
-    
-    var req *http.Request
-    
-    req, err = http.NewRequest("POST", url, strings.NewReader(string(lookupRequest)))
-    
-    if err != nil {
-            return
-    }
-    
-    req.Header.Add("Content-Type", "application/json")
-    req.Header.Add("Accept", "application/json")
-    req.SetBasicAuth(control.user, "")
-    resp, err := control.client.Do(req)
-    
-    if err != nil {
-	    	return
-    }
-
-    defer resp.Body.Close()
-
-    data, err := ioutil.ReadAll(resp.Body)
-    
-    if err != nil {
-	    	return
-    }
-
-    res := &ServiceLookupResponse{}
-    json.Unmarshal(data, res)
-    services = res.Services
-    return
+func (control *Control) AccountActivate() (response *AccountActivateResponse, err error) {
+	url := "https://" + *control.config.hostName + ":8910/pxgrid/control/AccountActivate"
+	request := AccountActivateRequest{}
+	response = &AccountActivateResponse{}
+	err = control.sendRequest(url, request, response)
+	return
 }
 
-func (control *Control) GetAccessSecret(peerNode string)(secret string, err error) {
-    url := "https://" + control.host + ":8910/pxgrid/control/AccessSecret"
-    accessRequest, _ := json.Marshal(AccessSecretRequest{ peerNode })
-    
-    var req *http.Request
-    
-    req, err = http.NewRequest("POST", url, strings.NewReader(string(accessRequest)))
-    
-    if err != nil {
-            return
-    }
-    
-    req.Header.Add("Content-Type", "application/json")
-    req.Header.Add("Accept", "application/json")
-    req.SetBasicAuth(control.user, "")
-    resp, err := control.client.Do(req)
-    
-    if err != nil {
-	    	return
-    }
+func (control *Control) ServiceLookup(serviceName string) (services []Service, err error) {
+	url := "https://" + *control.config.hostName + ":8910/pxgrid/control/ServiceLookup"
+	request := ServiceLookupRequest{serviceName}
+	response := &ServiceLookupResponse{}
+	err = control.sendRequest(url, request, response)
+	if err != nil {
+		return
+	}
+	services = response.Services
+	return
+}
 
-    defer resp.Body.Close()
-
-    data, err := ioutil.ReadAll(resp.Body)
-    
-    if err != nil {
-	    	return
-    }
-
-    res := &AccessSecretResponse{}
-    json.Unmarshal(data, res)
-    secret = res.Secret
-    return
+func (control *Control) GetAccessSecret(peerNode string) (secret string, err error) {
+	url := "https://" + *control.config.hostName + ":8910/pxgrid/control/AccessSecret"
+	request := AccessSecretRequest{peerNode}
+	response := &AccessSecretResponse{}
+	err = control.sendRequest(url, request, response)
+	if err != nil {
+		return
+	}
+	secret = response.Secret
+	return
 }

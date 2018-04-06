@@ -12,7 +12,7 @@ class Config:
         parser.add_argument('-c', '--clientcert', help='Client certificate chain pem filename (optional)')
         parser.add_argument('-k', '--clientkey', help='Client key filename (optional)')
         parser.add_argument('-p', '--clientkeypassword', help='Client key password (optional)')
-        parser.add_argument('-s', '--servercert', help='Server certificate pem filename')
+        parser.add_argument('-s', '--servercert', help='Server certificates pem filename')
         self.config = parser.parse_args()
 
     def get_host_name(self):

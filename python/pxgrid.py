@@ -25,7 +25,9 @@ class PxgridControl:
         return json.loads(response)
 
     def account_activate(self):
-        payload = {'description': self.config.get_description()}
+        payload = {}
+        if self.config.get_description() is not None:
+            payload['description'] = self.config.get_description()
         return self.send_rest_request('AccountActivate', payload)
 
     def service_lookup(self, service_name):
