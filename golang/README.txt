@@ -18,10 +18,6 @@ For now our sample does not handle encrypted keys. Decrypt it  and save it to go
 >openssl pkcs8 -in golang_.key  > golang_.key.clear
 
 To subscribe to session run the command:
-./http_pxgrid_subscribe -cert=golang_.cer -key=golang_.key.clear -CA=CertificateServicesRootCA-xxxx_.cer -host=pxgrid-host-fqdn -user=golang
-
-
-To subscribe to SGT topic run the command:
-./http_pxgrid_subscribe -cert=golang_.cer -key=golang_.key.clear -CA=golang_root.cer -host=pxgrid-host-fqdn  -user=golang -topicName=securityGroupTopic
+./http_pxgrid_subscribe -a hostname -n nodename -c client.cer -k client.key.clear -s server.cer
 
 

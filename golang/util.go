@@ -5,13 +5,6 @@ import (
 	"crypto/x509"
 	"flag"
 	"io/ioutil"
-	"net"
-	"time"
-)
-
-const (
-	connectTimeout = 30 * time.Second
-	rwTimeout      = 30 * time.Second
 )
 
 var supportedServices = map[string]string{
@@ -63,18 +56,4 @@ func (config Config) GetTLSConfig() (*tls.Config, error) {
 
 	tlsConfig.BuildNameToCertificate()
 	return tlsConfig, err
-
-}
-
-func TimeoutDialer() func(net, addr string) (c net.Conn, err error) {
-	return func(netw, addr string) (net.Conn, error) {
-		conn, err := net.DialTimeout(netw, addr, connectTimeout)
-
-		if err != nil {
-			return nil, err
-		}
-
-		// conn.SetDeadline(time.Now().Add(rwTimeout))
-		return conn, nil
-	}
 }

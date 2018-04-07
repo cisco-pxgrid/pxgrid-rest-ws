@@ -44,7 +44,6 @@ type Control struct {
 	client *http.Client
 }
 
-// func InitControl(tlsConfig *tls.Config, host, user string) (control *Control) {
 func NewControl(config Config) (control *Control, err error) {
 	tlsConfig, err := config.GetTLSConfig()
 	if err != nil {
@@ -52,7 +51,6 @@ func NewControl(config Config) (control *Control, err error) {
 	}
 	transport := &http.Transport{
 		TLSClientConfig: tlsConfig,
-		Dial:            TimeoutDialer(),
 	}
 	control = &Control{
 		config: config,

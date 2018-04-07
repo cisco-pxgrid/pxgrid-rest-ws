@@ -6,6 +6,16 @@ import (
 	"time"
 )
 
+func dataPrinter(dataChan <-chan *EndpointData) {
+	for data := range dataChan {
+		if data.Err == nil {
+			log.Println("Message=" + string(data.Content))
+		} else {
+			log.Println(data.Err)
+		}
+	}
+}
+
 func main() {
 	config := NewConfig()
 	control, err := NewControl(config)
@@ -13,7 +23,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	for { // wait for acccount to be activated
+	// AccountActivate
+	for {
 		res, err := control.AccountActivate()
 		if err != nil {
 			log.Fatal(err)
@@ -21,10 +32,10 @@ func main() {
 		if res.AccountState == "ENABLED" {
 			break
 		}
-		time.Sleep(10 * time.Second)
+		time.Sleep(30 * time.Second)
 	}
 
-	// pxGrid ServiceLookup
+	// pxGrid ServiceLookup for Session Directory
 	services, err := control.ServiceLookup("com.cisco.ise.session")
 	if err != nil {
 		log.Fatal(err)
@@ -37,57 +48,59 @@ func main() {
 	sessionTopic := services[0].Properties["sessionTopic"]
 	log.Println("wsPubsubService=", wsPubsubService, "sessionTopic=", sessionTopic)
 
+	// pxGrid ServiceLookup for pubsub service
 	pubsubServices, err := control.ServiceLookup(wsPubsubService)
-
 	if err != nil {
-		log.Fatal("Error occured while looking up", wsPubsubService, err)
+		log.Fatal(err)
 	} else if len(pubsubServices) == 0 {
-		log.Fatal("No pubsub services found using ", wsPubsubService)
+		log.Fatal("Pubsub service unavailable")
 	}
 
-	// Use the first service
+	// Use first pubsub service
 	pubsubService := pubsubServices[0]
+	pubsubNodeName := pubsubService.NodeName
+	wsUrl := pubsubService.Properties["wsUrl"]
+	log.Println("wsUrl=", wsUrl)
 
-	log.Println("wsPubsubNode=", pubsubService.NodeName)
-	log.Println("wsUrl=", pubsubService.Properties["wsUrl"])
-
-	// Get shared secret between user and wsPubsubNode
-	secret, err := control.GetAccessSecret(pubsubService.NodeName)
+	// pxGrid AccessSecret with the pubsub node
+	secret, err := control.GetAccessSecret(pubsubNodeName)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Setup WebSocket
 	endpoint, err := NewEndpoint(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	messageHandler := func(message []byte) {
-		// Notifications. Let us print it ...
-		log.Println(string(message))
+	log.Println("Press q to disconnect...")
+
+	err = endpoint.ConnectUsing(wsUrl, *config.nodeName, secret)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	errorHandler := func(err error) {
-		log.Println("Got error", err, "Disconnecting endpoint ...")
-		endpoint.Disconnect()
-	}
-
-	endpoint.SetMessageHandler(messageHandler)
-	endpoint.SetErrorHandler(errorHandler)
-
-	log.Println("Press q to exit:")
-
-	endpoint.ConnectUsing(pubsubService.Properties["wsUrl"], *config.nodeName, secret)
 	endpoint.Subscribe(sessionTopic)
-	go endpoint.Receive()
+
+	// Receive
+	dataChan := make(chan *EndpointData)
+	// go func(chan<- *EndpointData) {
+	// 	for data := range dataChan {
+	// 		if data.Err == nil {
+	// 			log.Println("Message=", string(data.Content))
+	// 		} else {
+	// 			log.Println(data.Err)
+	// 		}
+	// 	}
+	// }(dataChan)
+	go dataPrinter(dataChan)
+	go endpoint.Receiver(dataChan)
 
 	input := ""
-
 	for input != "q" {
 		fmt.Scanln(&input)
-
-		if input == "d" {
-			endpoint.Disconnect()
-		}
 	}
+	endpoint.Disconnect()
+	close(dataChan)
 }
