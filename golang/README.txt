@@ -3,10 +3,10 @@ Install golang Can use brew command or jsut download using golang website https:
 
 Install  websocket library  set GOPATH go where golang packages can be stored:
 > export GOPATH="..."
->go get github.com/gorilla/websocket
+> go get github.com/gorilla/websocket
 
 Build http_pxgrid_subscribe executable:
->go build http_pxgrid_subscribe.go  util.go pxgrid_control.go stomp_endpoint.go 
+> go build session_subscribe.go config.go pxgrid_control.go pubsub_endpoint.go stomp.go 
 
 The quickest way to get started is to generate a pxgrid client cert on Ise.  
 For CN enter golang 
@@ -15,9 +15,9 @@ Decrypt the key using openssl command  and save it to golang_.key.clear
 Open zip file. There should be golang_.cer, golang_.key, golang_root.cer
 For now our sample does not handle encrypted keys. Decrypt it  and save it to golang_.key.clear
 
->openssl pkcs8 -in golang_.key  > golang_.key.clear
+> openssl pkcs8 -in golang_.key  > golang_.key.clear
 
 To subscribe to session run the command:
-./http_pxgrid_subscribe -a hostname -n nodename -c client.cer -k client.key.clear -s server.cer
+> ./http_pxgrid_subscribe -a <hostname> -n <nodename> -c <client.cer> -k <client.key.clear> -s <server.cer>
 
 
