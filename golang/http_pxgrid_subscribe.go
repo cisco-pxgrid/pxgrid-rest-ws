@@ -74,33 +74,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Println("Press q to disconnect...")
-
-	err = endpoint.ConnectUsing(wsUrl, *config.nodeName, secret)
+	err = endpoint.Connect(wsUrl, config.nodeName, secret)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	endpoint.Subscribe(sessionTopic)
+	err = endpoint.Subscribe(sessionTopic)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// Receive
 	dataChan := make(chan *EndpointData)
-	// go func(chan<- *EndpointData) {
-	// 	for data := range dataChan {
-	// 		if data.Err == nil {
-	// 			log.Println("Message=", string(data.Content))
-	// 		} else {
-	// 			log.Println(data.Err)
-	// 		}
-	// 	}
-	// }(dataChan)
 	go dataPrinter(dataChan)
 	go endpoint.Receiver(dataChan)
 
-	input := ""
-	for input != "q" {
-		fmt.Scanln(&input)
-	}
+	log.Println("Press <enter> to disconnect...")
+	fmt.Scanln()
 	endpoint.Disconnect()
 	close(dataChan)
 }

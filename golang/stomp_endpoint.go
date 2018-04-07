@@ -27,7 +27,7 @@ type EndpointData struct {
 	Err     error
 }
 
-func NewEndpoint(config Config) (endpoint *Endpoint, err error) {
+func NewEndpoint(config *Config) (endpoint *Endpoint, err error) {
 	endpoint = &Endpoint{}
 	tlsConfig, err := config.GetTLSConfig()
 	if err != nil {
@@ -54,12 +54,12 @@ func (e *Endpoint) pinger(ch <-chan time.Time) {
 	}
 }
 
-func (e *Endpoint) ConnectUsing(url, user, password string) (err error) {
+func (e *Endpoint) Connect(url, user, password string) (err error) {
 	e.ws, _, err = e.dialer.Dial(url, createBasicAuthHeader(user, password))
 	if err != nil {
 		return
 	}
-	e.ws.SetPongHandler(func(string) error { log.Println("pong"); e.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	e.ws.SetPongHandler(func(string) error { e.ws.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	e.ticker = time.NewTicker(pingPeriod)
 	go e.pinger(e.ticker.C)
 	return

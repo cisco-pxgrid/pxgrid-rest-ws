@@ -40,11 +40,11 @@ type AccessSecretResponse struct {
 }
 
 type Control struct {
-	config Config
+	config *Config
 	client *http.Client
 }
 
-func NewControl(config Config) (control *Control, err error) {
+func NewControl(config *Config) (control *Control, err error) {
 	tlsConfig, err := config.GetTLSConfig()
 	if err != nil {
 		return
@@ -75,7 +75,8 @@ func (control *Control) sendRequest(url string, request interface{}, response in
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-	req.SetBasicAuth(*control.config.nodeName, "")
+
+	req.SetBasicAuth(control.config.nodeName, "")
 	resp, err := control.client.Do(req)
 	if err != nil {
 		return
@@ -94,7 +95,7 @@ func (control *Control) sendRequest(url string, request interface{}, response in
 }
 
 func (control *Control) AccountActivate() (response *AccountActivateResponse, err error) {
-	url := "https://" + *control.config.hostName + ":8910/pxgrid/control/AccountActivate"
+	url := "https://" + control.config.hostName + ":8910/pxgrid/control/AccountActivate"
 	request := AccountActivateRequest{}
 	response = &AccountActivateResponse{}
 	err = control.sendRequest(url, request, response)
@@ -102,7 +103,7 @@ func (control *Control) AccountActivate() (response *AccountActivateResponse, er
 }
 
 func (control *Control) ServiceLookup(serviceName string) (services []Service, err error) {
-	url := "https://" + *control.config.hostName + ":8910/pxgrid/control/ServiceLookup"
+	url := "https://" + control.config.hostName + ":8910/pxgrid/control/ServiceLookup"
 	request := ServiceLookupRequest{serviceName}
 	response := &ServiceLookupResponse{}
 	err = control.sendRequest(url, request, response)
@@ -114,7 +115,7 @@ func (control *Control) ServiceLookup(serviceName string) (services []Service, e
 }
 
 func (control *Control) GetAccessSecret(peerNode string) (secret string, err error) {
-	url := "https://" + *control.config.hostName + ":8910/pxgrid/control/AccessSecret"
+	url := "https://" + control.config.hostName + ":8910/pxgrid/control/AccessSecret"
 	request := AccessSecretRequest{peerNode}
 	response := &AccessSecretResponse{}
 	err = control.sendRequest(url, request, response)

@@ -7,42 +7,37 @@ import (
 	"io/ioutil"
 )
 
-var supportedServices = map[string]string{
-	"securityGroupTopic": "com.cisco.ise.trustsec.security.group",
-	"sessionTopic":       "com.cisco.ise.session",
-}
-
 type Config struct {
-	hostName    *string
-	nodeName    *string
-	description *string
-	certFile    *string
-	keyFile     *string
-	password    *string
-	caFile      *string
+	hostName    string
+	nodeName    string
+	description string
+	certFile    string
+	keyFile     string
+	password    string
+	caFile      string
 }
 
-func NewConfig() Config {
-	c := Config{}
-	c.hostName = flag.String("a", "", "Host name (multiple accepted)")
-	c.nodeName = flag.String("n", "", "Node name")
-	c.description = flag.String("d", "", "Description (optional)")
-	c.certFile = flag.String("c", "", "Client certificate chain .pem filename (not required if password is specified)")
-	c.keyFile = flag.String("k", "", "Client key unencrypted .key filename (not required if password is specified)")
-	c.password = flag.String("w", "", "Password (not required if client certificate is specified)")
-	c.caFile = flag.String("s", "", "Server certificates .pem filename")
+func NewConfig() *Config {
+	c := &Config{}
+	flag.StringVar(&c.hostName, "a", "", "Host name (multiple accepted)")
+	flag.StringVar(&c.nodeName, "n", "", "Node name")
+	flag.StringVar(&c.description, "d", "", "Description (optional)")
+	flag.StringVar(&c.certFile, "c", "", "Client certificate chain .pem filename (not required if password is specified)")
+	flag.StringVar(&c.keyFile, "k", "", "Client key unencrypted .key filename (not required if password is specified)")
+	flag.StringVar(&c.password, "w", "", "Password (not required if client certificate is specified)")
+	flag.StringVar(&c.caFile, "s", "", "Server certificates .pem filename")
 	flag.Parse()
 	return c
 }
 
-func (config Config) GetTLSConfig() (*tls.Config, error) {
-	cert, err := tls.LoadX509KeyPair(*config.certFile, *config.keyFile)
+func (config *Config) GetTLSConfig() (*tls.Config, error) {
+	cert, err := tls.LoadX509KeyPair(config.certFile, config.keyFile)
 
 	if err != nil {
 		return nil, err
 	}
 
-	caCert, err := ioutil.ReadFile(*config.caFile)
+	caCert, err := ioutil.ReadFile(config.caFile)
 	if err != nil {
 		return nil, err
 	}
