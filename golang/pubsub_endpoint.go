@@ -17,7 +17,7 @@ const (
 )
 
 type Endpoint struct {
-	dialer *websocket.Dialer
+	dialer websocket.Dialer
 	ws     *websocket.Conn
 	ticker *time.Ticker
 }
@@ -33,7 +33,7 @@ func NewEndpoint(config *Config) (endpoint *Endpoint, err error) {
 	if err != nil {
 		return
 	}
-	endpoint.dialer = &websocket.Dialer{
+	endpoint.dialer = websocket.Dialer{
 		TLSClientConfig: tlsConfig,
 	}
 	return
