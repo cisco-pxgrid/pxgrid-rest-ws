@@ -86,7 +86,7 @@ func main() {
 
 	dataChan := make(chan *EndpointData)
 	go dataPrinter(dataChan)
-	go endpoint.Receiver(dataChan)
+	go endpoint.Listener(dataChan)
 
 	log.Println("Press <enter> to disconnect...")
 	fmt.Scanln()

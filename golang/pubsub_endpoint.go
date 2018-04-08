@@ -75,8 +75,8 @@ func (e *Endpoint) Subscribe(topic string) (err error) {
 	return e.ws.WriteMessage(websocket.BinaryMessage, out.Bytes())
 }
 
-func (e *Endpoint) Receiver(dataChan chan<- *EndpointData) {
-	log.Println("Receiving...")
+func (e *Endpoint) Listener(dataChan chan<- *EndpointData) {
+	log.Println("Listening...")
 	e.ws.SetReadDeadline(time.Now().Add(pongWait))
 	for {
 		_, p, err := e.ws.ReadMessage()
@@ -98,6 +98,6 @@ func (e *Endpoint) Receiver(dataChan chan<- *EndpointData) {
 
 func (e *Endpoint) Disconnect() (err error) {
 	e.ticker.Stop()
-	e.ws.Close()
-	return nil
+	err = e.ws.Close()
+	return
 }
