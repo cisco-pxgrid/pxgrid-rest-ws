@@ -7,5 +7,8 @@ Convert ISE pxGrid generated certificates from PEM to JKS using jks-converter:
   6. The jks.zip contains keycert.jks and trust.jks
 
 Running SessionSubscribe sample with maven:
-mvn exec:java -Dexec.mainClass="com.cisco.pxgrid.samples.ise.SessionSubscribe" -Dexec.args="-a <hostname> -u <nodename> -k <keycert.cer> -p <keycert.jks password> -t <trust.jks> -q <trust.jks password>"
+
+`mvn exec:java -Dexec.mainClass="com.cisco.pxgrid.samples.ise.SessionSubscribe" -Dexec.args="-a <hostname> -u <nodename> -k <keycert.jks> -p <keycert.jks password> -t <trust.jks> -q <trust.jks password>"`
+
+
 
