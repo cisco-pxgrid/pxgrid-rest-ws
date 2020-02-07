@@ -6,6 +6,7 @@ class Config:
     def __init__(self):
         parser = argparse.ArgumentParser()
         parser.add_argument('-a', '--hostname', help='pxGrid controller host name (multiple ok)', action='append')
+        parser.add_argument('--port', help='pxGrid controller port', default=8910)
         parser.add_argument('-n', '--nodename', help='Client node name')
         parser.add_argument('-w', '--password', help='Password (optional)')
         parser.add_argument('-d', '--description', help='Description (optional)')
@@ -17,6 +18,9 @@ class Config:
 
     def get_host_name(self):
         return self.config.hostname
+
+    def get_port(self):
+        return self.config.port
 
     def get_node_name(self):
         return self.config.nodename

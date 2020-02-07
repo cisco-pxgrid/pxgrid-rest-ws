@@ -19,7 +19,7 @@ class WebSocketStomp:
                                            ssl=self.ssl_ctx)
 
     async def stomp_connect(self, hostname):
-        print('STOMP CONNECT host=' + hostname)
+        # print('STOMP CONNECT host=' + hostname)
         frame = StompFrame()
         frame.set_command("CONNECT")
         frame.set_header('accept-version', '1.2')
@@ -29,7 +29,7 @@ class WebSocketStomp:
         await self.ws.send(out.getvalue().encode('utf-8'))
 
     async def stomp_subscribe(self, topic):
-        print('STOMP SUBSCRIBE topic=' + topic)
+        # print('STOMP SUBSCRIBE topic=' + topic)
         frame = StompFrame()
         frame.set_command("SUBSCRIBE")
         frame.set_header('destination', topic)
@@ -39,7 +39,7 @@ class WebSocketStomp:
         await self.ws.send(out.getvalue().encode('utf-8'))
 
     async def stomp_send(self, topic, message):
-        print('STOMP SEND topic=' + topic)
+        # print('STOMP SEND topic=' + topic)
         frame = StompFrame()
         frame.set_command("SEND")
         frame.set_header('destination', topic)
@@ -58,15 +58,16 @@ class WebSocketStomp:
                 return stomp.get_content()
             elif stomp.get_command() == 'CONNECTED':
                 version = stomp.get_header('version')
-                print('STOMP CONNECTED version=' + version)
+                # print('STOMP CONNECTED version=' + version)
             elif stomp.get_command() == 'RECEIPT':
                 receipt = stomp.get_header('receipt-id')
-                print('STOMP RECEIPT id=' + receipt)
+                # print('STOMP RECEIPT id=' + receipt)
             elif stomp.get_command() == 'ERROR':
-                print('STOMP ERROR content=' + stomp.get_content())
+                # print('STOMP ERROR content=' + stomp.get_content())
+                pass
 
     async def stomp_disconnect(self, receipt=None):
-        print('STOMP DISCONNECT receipt=' + receipt)
+        # print('STOMP DISCONNECT receipt=' + receipt)
         frame = StompFrame()
         frame.set_command("DISCONNECT")
         if receipt is not None:

@@ -8,10 +8,11 @@ class PxgridControl:
         self.config = config
 
     def send_rest_request(self, url_suffix, payload):
-        url = 'https://' + self.config.get_host_name()[0] + ':8910/pxgrid/control/' + url_suffix
-        print("pxgrid url=" + url)
+        url = 'https://{}:{}/pxgrid/control/{}'.format(
+            self.config.get_host_name()[0],
+            self.config.get_port(),
+            url_suffix)
         json_string = json.dumps(payload)
-        print('  request=' + json_string)
         handler = urllib.request.HTTPSHandler(context=self.config.get_ssl_context())
         opener = urllib.request.build_opener(handler)
         rest_request = urllib.request.Request(url=url, data=str.encode(json_string))
@@ -21,7 +22,6 @@ class PxgridControl:
         rest_request.add_header('Authorization', 'Basic ' + b64)
         rest_response = opener.open(rest_request)
         response = rest_response.read().decode()
-        print('  response=' + response)
         return json.loads(response)
 
     def account_activate(self):

@@ -6,8 +6,8 @@ import time
 
 
 def query(config, secret, url, payload):
-    print('query url=' + url)
-    print('  request=' + payload)
+    # print('query url=' + url)
+    # print('  request=' + payload)
     handler = urllib.request.HTTPSHandler(context=config.get_ssl_context())
     opener = urllib.request.build_opener(handler)
     rest_request = urllib.request.Request(url=url, data=str.encode(payload))
@@ -16,8 +16,10 @@ def query(config, secret, url, payload):
     b64 = base64.b64encode((config.get_node_name() + ':' + secret).encode()).decode()
     rest_request.add_header('Authorization', 'Basic ' + b64)
     rest_response = opener.open(rest_request)
-    print('  response status=' + str(rest_response.getcode()))
-    print('  response content=' + rest_response.read().decode())
+    # print('  response status=' + str(rest_response.getcode()))
+    # print('  response content=' + rest_response.read().decode())
+    return rest_response.read().decode()
+
 
 if __name__ == '__main__':
     config = Config()
@@ -32,7 +34,11 @@ if __name__ == '__main__':
     node_name = service['nodeName']
     url = service['properties']['restBaseUrl'] + '/getSessions'
 
+
+    url = url.replace('8910', str(config.get_port()))
+    
     secret = pxgrid.get_access_secret(node_name)['secret']
 
-    query(config, secret, url, '{}')
+    resp = query(config, secret, url, '{}')
+    print(resp)
 
