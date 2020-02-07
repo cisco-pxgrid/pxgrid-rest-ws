@@ -13,9 +13,11 @@ class WebSocketStomp:
         self.ws = None
 
     async def connect(self):
-        b64 = base64.b64encode((self.user + ':' + self.password).encode()).decode()
+        b64 = base64.b64encode(
+            (self.user + ':' + self.password).encode()).decode()
         self.ws = await websockets.connect(uri=self.ws_url,
-                                           extra_headers={'Authorization': 'Basic ' + b64},
+                                           extra_headers={
+                                               'Authorization': 'Basic ' + b64},
                                            ssl=self.ssl_ctx)
 
     async def stomp_connect(self, hostname):
@@ -43,6 +45,7 @@ class WebSocketStomp:
         frame = StompFrame()
         frame.set_command("SEND")
         frame.set_header('destination', topic)
+        frame.set_header('content-length', str(len(message)))
         frame.set_content(message)
         out = StringIO()
         frame.write(out)
