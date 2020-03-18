@@ -15,6 +15,10 @@ import com.cisco.pxgrid.samples.ise.model.Service;
 public class SessionQueryByIP {
 	private static Logger logger = LoggerFactory.getLogger(SessionQueryByIP.class);
 
+	private static class SessionQueryRequest {
+		String ipAddress;
+	}
+	
 	private static void query(SampleConfiguration config, String ip) throws IOException {
 		PxgridControl pxgrid = new PxgridControl(config);
 		
@@ -33,8 +37,9 @@ public class SessionQueryByIP {
 		// pxGrid AccessSecret for the node
 		String secret = pxgrid.getAccessSecret(service.getNodeName());
 		
-		String postData = "{\"ipAddress\":\"" + ip + "\"}";
-		SampleHelper.postStringAndPrint(url, config.getNodeName(), secret, config.getSSLContext().getSocketFactory(), postData);
+		SessionQueryRequest req = new SessionQueryRequest();
+		req.ipAddress = ip;
+		SampleHelper.postAndPrint(url, config.getNodeName(), secret, config.getSSLContext().getSocketFactory(), req);
 	}
 
 	public static void main(String [] args) throws Exception {

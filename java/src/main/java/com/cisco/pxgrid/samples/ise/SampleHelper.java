@@ -55,14 +55,10 @@ public class SampleHelper {
 		return OffsetDateTime.parse(value);
 	}
 
-	public static void postObjectAndPrint(String url, String user, String password, SSLSocketFactory ssl,
+	public static void postAndPrint(String url, String user, String password, SSLSocketFactory ssl,
 			Object postObject) throws IOException {
 		Gson gson = new GsonBuilder().registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeAdapter()).create();
-		postStringAndPrint(url, user, password, ssl, gson.toJson(postObject));
-	}
-
-	public static void postStringAndPrint(String url, String user, String password, SSLSocketFactory ssl,
-			String postData) throws IOException {
+		String postData = gson.toJson(postObject);
 		logger.info("postData={}", postData);
 		HttpsURLConnection httpsConn = SampleHelper.createHttpsURLConnection(url, user, password, ssl);
 		httpsConn.setRequestMethod("POST");
@@ -91,6 +87,7 @@ public class SampleHelper {
 		}
 	}
 
+	// Parse and format ISO8601 dates
 	public static class OffsetDateTimeAdapter extends TypeAdapter<OffsetDateTime> {
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
