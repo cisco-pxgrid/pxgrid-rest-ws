@@ -91,7 +91,7 @@ public class SampleHelper {
 		}
 	}
 
-	private static class OffsetDateTimeAdapter extends TypeAdapter<OffsetDateTime> {
+	public static class OffsetDateTimeAdapter extends TypeAdapter<OffsetDateTime> {
 		DateTimeFormatter formatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
 		@Override
