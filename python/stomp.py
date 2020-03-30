@@ -1,4 +1,11 @@
 import io
+import logging
+
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 
 class StompFrame:
@@ -26,6 +33,7 @@ class StompFrame:
         self.headers[key] = value
 
     def write(self, out):
+        logger.debug('write')
         out.write(self.command)
         out.write('\n')
         for key in self.headers:
@@ -40,6 +48,7 @@ class StompFrame:
 
     @staticmethod
     def parse(input):
+        logger.debug('parse')
         frame = StompFrame()
         frame.command = input.readline().rstrip('\r\n')
         for line in input:
@@ -49,4 +58,5 @@ class StompFrame:
             (name, value) = line.split(':')
             frame.headers[name] = value
         frame.content = input.read()[:-1]
+        logger.debug('parse frame content: %s', frame.content)
         return frame

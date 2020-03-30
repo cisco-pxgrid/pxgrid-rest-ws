@@ -29,10 +29,10 @@ if __name__ == '__main__':
         time.sleep(60)
 
     # lookup for session service
-    service_lookup_response = pxgrid.service_lookup('com.cisco.ise.session')
+    service_lookup_response = pxgrid.service_lookup('com.cisco.ise.config.trustsec')
     service = service_lookup_response['services'][0]
     node_name = service['nodeName']
-    url = service['properties']['restBaseUrl'] + '/getSessions'
+    url = service['properties']['restBaseUrl'] + '/getSecurityGroupAcls'
 
 
     url = url.replace('8910', str(config.port))

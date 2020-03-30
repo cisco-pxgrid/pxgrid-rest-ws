@@ -4,6 +4,7 @@ import ssl
 
 class Config:
     def __init__(self):
+        self.__ssl_context = None
         parser = argparse.ArgumentParser()
         parser.add_argument('-a', '--hostname', help='pxGrid controller host name (multiple ok)', action='append')
         parser.add_argument('--port', help='pxGrid controller port', default=8910)
@@ -19,31 +20,73 @@ class Config:
                             help='Client key password (optional)')
         parser.add_argument('-s', '--servercert',
                             help='Server certificates pem filename')
+        parser.add_argument('--service', type=str,
+                            help='Service name')
+        parser.add_argument('--topic', type=str,
+                            help='Topic to subscribe to')
+        parser.add_argument(
+            '--subscribe', action='store_true',
+            help='set up a subscription')
+        parser.add_argument(
+            '--services', action='store_true',
+            help='List out supported services')
+        parser.add_argument(
+            '-v', '--verbose', action='store_true',
+            help='Verbose output if relevant')
+
         self.config = parser.parse_args()
 
-    def get_host_name(self):
+    @property
+    def subscribe(self):
+        return self.config.subscribe
+
+    @property
+    def services(self):
+        return self.config.services
+
+    @property
+    def verbose(self):
+        return self.config.verbose
+
+    @property
+    def hostname(self):
         return self.config.hostname
 
-    def get_port(self):
+    @property
+    def port(self):
         return self.config.port
 
-    def get_node_name(self):
+    @property
+    def node_name(self):
         return self.config.nodename
 
-    def get_password(self):
+    @property
+    def password(self):
         if self.config.password is not None:
             return self.config.password
         else:
             return ''
 
-    def get_description(self):
+    @property
+    def service(self):
+        return self.config.service
+
+    @property
+    def topic(self):
+        return self.config.topic
+
+    @property
+    def description(self):
         return self.config.description
 
-    def get_ssl_context(self):
-        context = ssl.create_default_context()
-        if self.config.clientcert is not None:
-            context.load_cert_chain(certfile=self.config.clientcert,
-                                    keyfile=self.config.clientkey,
-                                    password=self.config.clientkeypassword)
-        context.load_verify_locations(cafile=self.config.servercert)
-        return context
+    @property
+    def ssl_context(self):
+        if self.__ssl_context == None:
+            self.__ssl_context = ssl.create_default_context()
+            if self.config.clientcert is not None:
+                self.__ssl_context.load_cert_chain(
+                    certfile=self.config.clientcert,
+                    keyfile=self.config.clientkey,
+                    password=self.config.clientkeypassword)
+            self.__ssl_context.load_verify_locations(cafile=self.config.servercert)
+        return self.__ssl_context

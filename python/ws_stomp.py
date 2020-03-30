@@ -2,7 +2,13 @@ import base64
 import websockets
 from io import StringIO
 from stomp import StompFrame
+import logging
 
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
 
 class WebSocketStomp:
     def __init__(self, ws_url, user, password, ssl_ctx):
@@ -29,6 +35,7 @@ class WebSocketStomp:
         out = StringIO()
         frame.write(out)
         await self.ws.send(out.getvalue().encode('utf-8'))
+        logger.debug('stomp_connect completed')
 
     async def stomp_subscribe(self, topic):
         # print('STOMP SUBSCRIBE topic=' + topic)
@@ -39,9 +46,10 @@ class WebSocketStomp:
         out = StringIO()
         frame.write(out)
         await self.ws.send(out.getvalue().encode('utf-8'))
+        logger.debug('stomp_subscribe completed')
 
     async def stomp_send(self, topic, message):
-        # print('STOMP SEND topic=' + topic)
+        logger.debug('STOMP SEND topic=' + topic)
         frame = StompFrame()
         frame.set_command("SEND")
         frame.set_header('destination', topic)
@@ -50,6 +58,7 @@ class WebSocketStomp:
         out = StringIO()
         frame.write(out)
         await self.ws.send(out.getvalue().encode('utf-8'))
+        logger.debug('stomp_sned completed')
 
     # only returns for MESSAGE
     async def stomp_read_message(self):
@@ -61,16 +70,17 @@ class WebSocketStomp:
                 return stomp.get_content()
             elif stomp.get_command() == 'CONNECTED':
                 version = stomp.get_header('version')
-                # print('STOMP CONNECTED version=' + version)
+                logger.debug('STOMP CONNECTED version=' + version)
             elif stomp.get_command() == 'RECEIPT':
                 receipt = stomp.get_header('receipt-id')
-                # print('STOMP RECEIPT id=' + receipt)
+                logger.debug('STOMP RECEIPT id=' + receipt)
             elif stomp.get_command() == 'ERROR':
-                # print('STOMP ERROR content=' + stomp.get_content())
+                logger.debug('STOMP ERROR content=' + stomp.get_content())
                 pass
+        logger.debug('stomp_read_message completed')
 
     async def stomp_disconnect(self, receipt=None):
-        # print('STOMP DISCONNECT receipt=' + receipt)
+        logger.debug('STOMP DISCONNECT receipt=' + receipt)
         frame = StompFrame()
         frame.set_command("DISCONNECT")
         if receipt is not None:

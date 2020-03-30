@@ -29,7 +29,7 @@ async def future_read_message(ws, future):
         logger.debug('Websocket connection closed')
 
 async def subscribe_loop(config, secret, ws_url, topic):
-    ws = WebSocketStomp(ws_url, config.node_name, secret, config.ssl_context)
+    ws = WebSocketStomp(ws_url, config.get_node_name(), secret, config.get_ssl_context())
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
     await ws.stomp_subscribe(topic)
@@ -62,10 +62,10 @@ if __name__ == '__main__':
         time.sleep(60)
 
     # lookup for session service
-    service_lookup_response = pxgrid.service_lookup('com.cisco.ise.session')
+    service_lookup_response = pxgrid.service_lookup('com.cisco.ise.config.trustsec')
     service = service_lookup_response['services'][0]
     pubsub_service_name = service['properties']['wsPubsubService']
-    topic = service['properties']['sessionTopic']
+    topic = service['properties']['securityGroupAclTopic']
 
     # lookup for trustsec object changes
     # service_lookup_response = pxgrid.service_lookup('com.cisco.ise.config.trustsec')
@@ -80,6 +80,6 @@ if __name__ == '__main__':
     secret = pxgrid.get_access_secret(pubsub_node_name)['secret']
     ws_url = pubsub_service['properties']['wsUrl']
 
-    ws_url = ws_url.replace('8910', str(config.port))
+    ws_url = ws_url.replace('8910', str(config.get_port()))
     
     asyncio.get_event_loop().run_until_complete(subscribe_loop(config, secret, ws_url, topic))
