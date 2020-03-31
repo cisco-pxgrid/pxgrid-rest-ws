@@ -11,10 +11,6 @@ from ws_stomp import WebSocketStomp
 
 
 logger = logging.getLogger(__name__)
-handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
 
 
 def key_enter_callback(event):
@@ -29,7 +25,7 @@ async def future_read_message(ws, future):
         logger.debug('Websocket connection closed')
 
 async def subscribe_loop(config, secret, ws_url, topic):
-    ws = WebSocketStomp(ws_url, config.get_node_name(), secret, config.get_ssl_context())
+    ws = WebSocketStomp(ws_url, config.node_name, secret, config.ssl_context)
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
     await ws.stomp_subscribe(topic)
@@ -56,6 +52,23 @@ async def subscribe_loop(config, secret, ws_url, topic):
 
 if __name__ == '__main__':
     config = Config()
+
+    #
+    # verbose logging if configured
+    #
+    if config.verbose:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+
+        # and set for stomp and ws_stomp modules also
+        for stomp_mod in ['stomp', 'ws_stomp']:
+            s_logger = logging.getLogger(stomp_mod)
+            handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+            s_logger.addHandler(handler)
+            s_logger.setLevel(logging.DEBUG)
+            
     pxgrid = PxgridControl(config=config)
 
     while pxgrid.account_activate()['accountState'] != 'ENABLED':
@@ -80,6 +93,6 @@ if __name__ == '__main__':
     secret = pxgrid.get_access_secret(pubsub_node_name)['secret']
     ws_url = pubsub_service['properties']['wsUrl']
 
-    ws_url = ws_url.replace('8910', str(config.get_port()))
+    ws_url = ws_url.replace('8910', str(config.port))
     
     asyncio.get_event_loop().run_until_complete(subscribe_loop(config, secret, ws_url, topic))

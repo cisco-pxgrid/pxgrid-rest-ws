@@ -75,6 +75,14 @@ if __name__ == '__main__':
         logger.addHandler(handler)
         logger.setLevel(logging.DEBUG)
 
+        # and set for stomp and ws_stomp modules also
+        for stomp_mod in ['stomp', 'ws_stomp']:
+            s_logger = logging.getLogger(stomp_mod)
+            handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+            s_logger.addHandler(handler)
+            s_logger.setLevel(logging.DEBUG)
+
+
     #
     # if we jst have a request for services and no hostname, we can only
     # list out the services we know about

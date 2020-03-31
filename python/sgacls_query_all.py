@@ -3,6 +3,9 @@ from config import Config
 import urllib.request
 import base64
 import time
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def query(config, secret, url, payload):
@@ -23,6 +26,23 @@ def query(config, secret, url, payload):
 
 if __name__ == '__main__':
     config = Config()
+
+    #
+    # verbose logging if configured
+    #
+    if config.verbose:
+        handler = logging.StreamHandler()
+        handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+
+        # and set for stomp and ws_stomp modules also
+        for stomp_mod in ['stomp', 'ws_stomp']:
+            s_logger = logging.getLogger(stomp_mod)
+            handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
+            s_logger.addHandler(handler)
+            s_logger.setLevel(logging.DEBUG)
+
     pxgrid = PxgridControl(config=config)
 
     while pxgrid.account_activate()['accountState'] != 'ENABLED':

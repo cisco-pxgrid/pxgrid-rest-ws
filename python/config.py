@@ -1,5 +1,6 @@
 import argparse
 import ssl
+import warnings
 
 
 class Config:
@@ -88,5 +89,10 @@ class Config:
                     certfile=self.config.clientcert,
                     keyfile=self.config.clientkey,
                     password=self.config.clientkeypassword)
-            self.__ssl_context.load_verify_locations(cafile=self.config.servercert)
+            if self.config.servercert:
+                self.__ssl_context.load_verify_locations(cafile=self.config.servercert)
+            else:
+                warnings.warn("check_hostname and cert not used; unsafe for production use")
+                self.__ssl_context.check_hostname = False
+                self.__ssl_context.verify_mode = ssl.CERT_NONE
         return self.__ssl_context
