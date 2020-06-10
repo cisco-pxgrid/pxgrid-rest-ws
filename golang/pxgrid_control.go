@@ -45,12 +45,13 @@ type Control struct {
 }
 
 func NewControl(config *Config) (control *Control, err error) {
-	tlsConfig, err := config.GetTLSConfig()
+	// tlsConfig, err := config.GetTLSConfig()
 	if err != nil {
 		return
 	}
 	transport := &http.Transport{
-		TLSClientConfig: tlsConfig,
+		DialTLS: config.DialTLS,
+		// TLSClientConfig: tlsConfig,
 	}
 	control = &Control{
 		config: config,
