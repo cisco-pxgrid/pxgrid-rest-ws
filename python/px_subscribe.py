@@ -56,7 +56,7 @@ async def subscribe_loop(config, secret, ws_url, topic):
     await ws.stomp_disconnect('123')
     await asyncio.sleep(2.0)
     await ws.disconnect()
-        
+
 
 if __name__ == '__main__':
 
@@ -159,12 +159,15 @@ if __name__ == '__main__':
     secret = pxgrid.get_access_secret(pubsub_node_name)['secret']
     ws_url = pubsub_service['properties']['wsUrl']
 
+    # ws_url = ws_url.replace('ise-test.cisco.com', '172.23.41.172')
+    # logger.debug('ws_url = %s', ws_url)
+
     # This has been added for if a non-standard port is being used via an
     # API gateway like Kong. pxGrid still returns an embedded port number.
     #
     # TODO: remove when appropriate
     #
-    ws_url = ws_url.replace('8910', str(config.port))
+    # ws_url = ws_url.replace('8910', str(config.port))
     
     loop = asyncio.get_event_loop()
     main_task = asyncio.ensure_future(subscribe_loop(config, secret, ws_url, topic))
