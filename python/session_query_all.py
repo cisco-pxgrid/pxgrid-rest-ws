@@ -4,6 +4,7 @@ import urllib.request
 import base64
 import time
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +54,10 @@ if __name__ == '__main__':
     node_name = service['nodeName']
     url = service['properties']['restBaseUrl'] + '/getSessions'
 
-
-    url = url.replace('8910', str(config.port))
+    # force port from CLI
+    # url = url.replace('8910', str(config.port))
     
     secret = pxgrid.get_access_secret(node_name)['secret']
 
     resp = query(config, secret, url, '{}')
-    print(resp)
-
+    print(json.dumps(json.loads(resp), indent=2, sort_keys=True))

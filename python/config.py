@@ -32,6 +32,9 @@ class Config:
             '--services', action='store_true',
             help='List out supported services')
         parser.add_argument(
+            '--ip', type=str,
+            help='Optional IP address for queries')
+        parser.add_argument(
             '-v', '--verbose', action='store_true',
             help='Verbose output if relevant')
 
@@ -75,6 +78,10 @@ class Config:
     @property
     def topic(self):
         return self.config.topic
+
+    @property
+    def ip(self):
+        return self.config.ip
 
     @property
     def description(self):

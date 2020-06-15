@@ -3,11 +3,12 @@ from config import Config
 import urllib.request
 import base64
 import time
+import json
 
 
 def query(config, secret, url, payload):
-    print('query url=' + url)
-    print('  request=' + payload)
+    # print('query url=' + url)
+    # print('  request=' + payload)
     handler = urllib.request.HTTPSHandler(context=config.ssl_context)
     opener = urllib.request.build_opener(handler)
     rest_request = urllib.request.Request(url=url, data=str.encode(payload))
@@ -16,8 +17,10 @@ def query(config, secret, url, payload):
     b64 = base64.b64encode((config.node_name + ':' + secret).encode()).decode()
     rest_request.add_header('Authorization', 'Basic ' + b64)
     rest_response = opener.open(rest_request)
-    print('  response status=' + str(rest_response.getcode()))
-    print('  response content=' + rest_response.read().decode())
+    # print('  response status=' + str(rest_response.getcode()))
+    # print('  response content=' + rest_response.read().decode())
+    return rest_response.read().decode()
+
 
 if __name__ == '__main__':
     config = Config()
@@ -34,6 +37,9 @@ if __name__ == '__main__':
 
     secret = pxgrid.get_access_secret(node_name)['secret']
 
-    ip = input('Enter IP address: ')
-    query(config, secret, url, '{ "ipAddress": "%s" }' % ip)
-
+    if not config.ip:
+        ip = input('Enter IP address: ')
+    else:
+        ip = config.ip
+    resp = query(config, secret, url, '{ "ipAddress": "%s" }' % ip)
+    print(json.dumps(json.loads(resp), indent=2, sort_keys=True))

@@ -7,6 +7,12 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+###
+# HACK
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
+#
+###
 
 def query(config, secret, url, payload):
     # print('query url=' + url)
@@ -54,11 +60,14 @@ if __name__ == '__main__':
     node_name = service['nodeName']
     url = service['properties']['restBaseUrl'] + '/getSecurityGroupAcls'
 
+    # force port
+    # url = url.replace('8910', str(config.port))
 
-    url = url.replace('8910', str(config.port))
-    
+    # log url to see what we get via discovery
+    logger.info('Using URL %s', url)
+
     secret = pxgrid.get_access_secret(node_name)['secret']
-
+    logger.info('Using access secret %s', secret)
     resp = query(config, secret, url, '{}')
-    print(resp)
+    print(json.dumps(json.loads(resp), indent=2, sort_keys=True))
 
