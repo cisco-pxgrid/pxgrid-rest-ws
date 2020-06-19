@@ -9,12 +9,7 @@ import (
 )
 
 func dataPrinter(dataChan <-chan *EndpointData) {
-	for {
-		data, ok := <-dataChan
-		if !ok {
-			// channel closed
-			return
-		}
+	for data := range dataChan {
 		if data.Err == nil {
 			log.Println("Message=" + string(data.Content))
 		} else {
