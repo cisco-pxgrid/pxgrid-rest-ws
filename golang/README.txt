@@ -17,5 +17,5 @@ Go does not have built-in support for encrypted PKCS8 key, so decrypt the client
 > openssl pkcs8 -in client.key  > client.key.clear
 
 Run sample session_subscribe:
-> ./session_subscribe -a <hostname> -n <nodename> -c <client.cer> -k <client.key.clear> -s <server.cer>
+> ./session_subscribe -a <hostname> -n <nodename> -c <client-chain.cer> -k <client.key.clear> -s <server.cer>
 
