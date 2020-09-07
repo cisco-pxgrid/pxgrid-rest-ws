@@ -29,8 +29,17 @@ class Config:
             '--subscribe', action='store_true',
             help='set up a subscription')
         parser.add_argument(
+            '--subscribe-all', action='store_true',
+            help='subscribe to ALL nodes discovered')
+        parser.add_argument(
+            '--session-dedup', action='store_true',
+            help='run the sessionTopic de-duplicating subscriber')
+        parser.add_argument(
             '--services', action='store_true',
             help='List out supported services')
+        parser.add_argument(
+            '--service-details', type=str,
+            help='List out details of a specific service')
         parser.add_argument(
             '--ip', type=str,
             help='Optional IP address for queries')
@@ -45,8 +54,20 @@ class Config:
         return self.config.subscribe
 
     @property
+    def subscribe_all(self):
+        return self.config.subscribe_all
+
+    @property
+    def session_dedup(self):
+        return self.config.session_dedup
+
+    @property
     def services(self):
         return self.config.services
+
+    @property
+    def service_details(self):
+        return self.config.service_details
 
     @property
     def verbose(self):
