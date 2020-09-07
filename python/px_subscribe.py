@@ -89,43 +89,17 @@ async def default_subscription_loop(config, secret, ws_url, topic):
 
 async def session_dedup_loop(config, secret, ws_url, topic):
     '''
-    Subscription loop specifically for ISE pxGrid sessionTopic events.
-    '''
-    logger.debug('starting subscription to %s at %s', topic, ws_url)
-    assert topic == '/topic/com.cisco.ise.session', '%s is not the sessionTopic'
-
-    ws = WebSocketStomp(ws_url, config.node_name, secret, config.ssl_context)
-    await ws.connect()
-    await ws.stomp_connect(pubsub_node_name)
-    await ws.stomp_subscribe(topic)
-    try:
-        while True:
-            message = json.loads(await ws.stomp_read_message())
-            with dedup_lock:
-                for s in message['sessions']:
-                    event_key = '{}:{}'.format(
-                        s['callingStationId'], s['timestamp'])
-                    if event_keys.get(event_key):
-                        print('duplicate event {}'.format(event_key))
-                        print('    --> {}'.format(ws_url))
-                        print(textwrap.indent(
-                            json.dumps(s, indent=2, sort_keys=True),
-                            '    --|'), file=sys.stdout)
-                    else:
-                        event_keys[event_key] = time.time()
-                        print(json.dumps(s, indent=2, sort_keys=True), file=sys.stdout)
-            sys.stdout.flush()
-    except CancelledError as e:
-        pass
-    logger.debug('shutting down listener...')
-    await ws.stomp_disconnect('123')
-    await asyncio.sleep(2.0)
-    await ws.disconnect()
-
-
-async def session_dedup_loop_store_hash(config, secret, ws_url, topic):
-    '''
-    Subscription loop specifically for ISE pxGrid sessionTopic events.
+    Subscription loop specifically for ISE pxGrid sessionTopic events. The
+    logic for de-duplication is based around callingStationId, timestamp and
+    event content. Multiple events may have the same callimgStationId and 
+    timestamp, but attribute changes, like profiling determining the operating
+    system for a device, may result in events that have the same timestamp but
+    different contents.
+    
+    The algorithm in this routine takes this into account, and will "de-
+    duplicate" the events (i.e. tell you when a duplicate event arrived). It
+    uses MD5 (for speed) on a key-sorted dump of the event (which ensures that
+    duplicate events are detected by the hash digest differing.)
     '''
     logger.debug('starting subscription to %s at %s', topic, ws_url)
     assert topic == '/topic/com.cisco.ise.session', '%s is not the sessionTopic'
@@ -140,27 +114,20 @@ async def session_dedup_loop_store_hash(config, secret, ws_url, topic):
             with dedup_lock:
                 for s in message['sessions']:
                     event_text = json.dumps(s, indent=2, sort_keys=True)
-                    event_hash = hashlib.sha256(event_text.encode()).hexdigest()
-                    event_key = '{}:{}'.format(
-                        s['callingStationId'], s['timestamp'])
+                    event_hash = hashlib.md5(event_text.encode()).hexdigest()
+                    event_key = '{}:{}:{}'.format(
+                        s['callingStationId'], s['timestamp'], event_hash)
                     if event_keys.get(event_key):
-                        if event_keys[event_key]['sha256'] == event_hash:
-                            print('duplicate MAC:Timestamp event {}'.format(event_key))
-                            print('    --> {}'.format(ws_url))
-                        else:
-                            print('duplicate timestamp event {}'.format(event_key))
-                            print('    --> {}'.format(ws_url))
-                            print('    Original Event:')
-                            print(textwrap.indent(event_keys[event_key]['event'], '    --|'))
-                            print('    Duplicate MAC:Timestamp Event:')
-                            print(textwrap.indent(
-                                json.dumps(s, indent=2, sort_keys=True),
-                                '    --|'))
+                        event_keys[event_key]['count'] = event_keys[event_key]['count'] + 1
+                        print('duplicate mac:timestamp:hash event, count {}'.format(
+                            event_keys[event_key]['count']))
+                        print('    --> {}'.format(ws_url))
                     else:
                         event_keys[event_key] = {}
+                        event_keys[event_key]['count'] = 1
                         event_keys[event_key]['time'] = time.time()
                         event_keys[event_key]['event'] = event_text
-                        event_keys[event_key]['sha256'] = event_hash
+                        event_keys[event_key]['md5'] = event_hash
                         print('{}\nevent from {}'.format('-' * 75, ws_url))
                         print(json.dumps(s, indent=2, sort_keys=True))
             sys.stdout.flush()
@@ -300,7 +267,7 @@ if __name__ == '__main__':
     # select the subscription loop
     subscription_loop = default_subscription_loop
     if config.session_dedup:
-        subscription_loop = session_dedup_loop_store_hash
+        subscription_loop = session_dedup_loop
 
     if not config.subscribe_all:
 
