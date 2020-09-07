@@ -1,8 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -88,8 +90,15 @@ func main() {
 	go dataPrinter(dataChan)
 	go endpoint.Listener(dataChan)
 
-	log.Println("Press <enter> to disconnect...")
-	fmt.Scanln()
+	// Setup abort channel
+	log.Println("Press <Ctrl-c> to disconnect...")
+	abort := make(chan os.Signal)
+	signal.Notify(abort, os.Interrupt, syscall.SIGTERM)
+	<-abort
+
+	// Cleanup
+	log.Printf("Disconnecting websocket connection...")
 	endpoint.Disconnect()
 	close(dataChan)
+	log.Printf("...Done")
 }
