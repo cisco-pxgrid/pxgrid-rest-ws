@@ -1,53 +1,38 @@
 import asyncio
-from asyncio.tasks import FIRST_COMPLETED
-from pxgrid import PxgridControl
-from config import Config
 import json
+import signal
 import sys
 import time
 import logging
 from websockets import ConnectionClosed
 from ws_stomp import WebSocketStomp
+from config import Config
+from pxgrid import PxgridControl
 
 
 logger = logging.getLogger(__name__)
 
 
-def key_enter_callback(event):
-    sys.stdin.readline()
-    event.set()
-
-async def future_read_message(ws, future):
-    try:
-        message = await ws.stomp_read_message()
-        future.set_result(message)
-    except ConnectionClosed:
-        logger.debug('Websocket connection closed')
-
 async def subscribe_loop(config, secret, ws_url, topic):
+    '''
+    Simple subscription loop just to display whatever events arrive.
+    '''
+    logger.debug('starting subscription to %s at %s', topic, ws_url)
     ws = WebSocketStomp(ws_url, config.node_name, secret, config.ssl_context)
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
     await ws.stomp_subscribe(topic)
-    # setup keyboard callback
-    # stop_event = asyncio.Event()
-    # asyncio.get_event_loop().add_reader(sys.stdin, key_enter_callback, stop_event)
-    # logger.debug(w"press <enter> to disconnect...")
-    while True:
-        # future = asyncio.Future()
-        # future_read = future_read_message(ws, future)
-        # await asyncio.wait([stop_event.wait(), future_read], return_when=FIRST_COMPLETED)
-        # if not stop_event.is_set():
-        message = json.loads(await ws.stomp_read_message())
-        # message = json.loads(future.result())
-        print(json.dumps(message, indent=2, sort_keys=True), file=sys.stdout)
-        sys.stdout.flush()
-        # else:
-        #     await ws.stomp_disconnect('123')
-        #     # wait for receipt
-        #     await asyncio.sleep(3)
-        #     await ws.disconnect()
-        #     break
+    try:
+        while True:
+            message = json.loads(await ws.stomp_read_message())
+            print(json.dumps(message, indent=2, sort_keys=True), file=sys.stdout)
+            sys.stdout.flush()
+    except CancelledError as e:
+        pass
+    logger.debug('shutting down listener...')
+    await ws.stomp_disconnect('123')
+    await asyncio.sleep(2.0)
+    await ws.disconnect()
         
 
 if __name__ == '__main__':
@@ -80,12 +65,6 @@ if __name__ == '__main__':
     pubsub_service_name = service['properties']['wsPubsubService']
     topic = service['properties']['sessionTopic']
 
-    # lookup for trustsec object changes
-    # service_lookup_response = pxgrid.service_lookup('com.cisco.ise.config.trustsec')
-    # service = service_lookup_response['services'][0]
-    # pubsub_service_name = service['properties']['wsPubsubService']
-    # topic = service['properties']['securityGroupTopic']
-
     # lookup for pubsub service
     service_lookup_response = pxgrid.service_lookup(pubsub_service_name)
     pubsub_service = service_lookup_response['services'][0]
@@ -93,6 +72,12 @@ if __name__ == '__main__':
     secret = pxgrid.get_access_secret(pubsub_node_name)['secret']
     ws_url = pubsub_service['properties']['wsUrl']
 
-    ws_url = ws_url.replace('8910', str(config.port))
-    
-    asyncio.get_event_loop().run_until_complete(subscribe_loop(config, secret, ws_url, topic))
+    # setup main loop, including ctrl-c to cancel handling    
+    loop = asyncio.get_event_loop()
+    main_task = asyncio.ensure_future(subscribe_loop(config, secret, ws_url, topic))
+    loop.add_signal_handler(signal.SIGINT, main_task.cancel)
+    loop.add_signal_handler(signal.SIGTERM, main_task.cancel)
+    try:
+        loop.run_until_complete(main_task)
+    except:
+        pass

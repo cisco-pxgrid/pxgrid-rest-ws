@@ -2,7 +2,6 @@ package com.cisco.pxgrid.samples.ise;
 
 import java.net.URI;
 
-import javax.net.ssl.SSLSession;
 import javax.websocket.Session;
 
 import org.apache.commons.cli.ParseException;
