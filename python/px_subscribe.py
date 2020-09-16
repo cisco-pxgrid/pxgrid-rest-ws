@@ -1,9 +1,5 @@
 import asyncio
 from asyncio.tasks import FIRST_COMPLETED
-
-# from asyncio.futures import CancelledError
-from asyncio import CancelledError
-
 from pxgrid import PxgridControl
 from config import Config
 import json
@@ -70,8 +66,6 @@ async def default_subscription_loop(config, secret, ws_url, topic):
     Simple subscription loop just to display whatever events arrive.
     '''
     logger.debug('starting subscription to %s at %s', topic, ws_url)
-    if not node_name:
-        node_name = config.node_name
     ws = WebSocketStomp(ws_url, config.node_name, secret, config.ssl_context)
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
@@ -81,7 +75,7 @@ async def default_subscription_loop(config, secret, ws_url, topic):
             message = json.loads(await ws.stomp_read_message())
             print(json.dumps(message, indent=2, sort_keys=True), file=sys.stdout)
             sys.stdout.flush()
-    except CancelledError as e:
+    except asyncio.CancelledError as e:
         pass
     logger.debug('shutting down listener...')
     await ws.stomp_disconnect('123')
@@ -133,12 +127,24 @@ async def session_dedup_loop(config, secret, ws_url, topic):
                         print('{}\nevent from {}'.format('-' * 75, ws_url))
                         print(json.dumps(s, indent=2, sort_keys=True))
             sys.stdout.flush()
-    except CancelledError as e:
+    except asyncio.CancelledError as e:
         pass
     logger.debug('shutting down listener...')
     await ws.stomp_disconnect('123')
     await asyncio.sleep(2.0)
     await ws.disconnect()
+
+
+# subscribe to topic on ALL service nodes returned
+async def run_subscribe_all(task_list):
+    logger.debug('run_subscribe_all')
+    if len(task_list) > 0:
+        try:
+            return await asyncio.gather(*task_list)
+        except asyncio.CancelledError as e:
+            for t in task_list:
+                t.cancel()
+            return await asyncio.gather(*task_list)
 
 
 if __name__ == '__main__':
@@ -159,7 +165,7 @@ if __name__ == '__main__':
         logger.setLevel(logging.DEBUG)
 
         # and set for stomp and ws_stomp modules also
-        for stomp_mod in ['stomp', 'ws_stomp']:
+        for stomp_mod in ['stomp', 'ws_stomp', 'pxgrid']:
             s_logger = logging.getLogger(stomp_mod)
             handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
             s_logger.addHandler(handler)
@@ -290,13 +296,7 @@ if __name__ == '__main__':
 
     else:
 
-        # subscribe to topic on ALL service nodes returned
-        async def run_subscribe_all(task_list):
-            logger.debug('run_subscribe_all')
-            if len(task_list) > 0:
-                return await asyncio.gather(*task_list)
-        
-        # get params for all subscribers
+        # create all subscription tasks
         subscriber_tasks = []
         loop = asyncio.get_event_loop()
         for pubsub_service in service_lookup_response['services']:
@@ -304,11 +304,15 @@ if __name__ == '__main__':
             secret = pxgrid.get_access_secret(pubsub_node_name)['secret']
             ws_url = pubsub_service['properties']['wsUrl']
             task = asyncio.ensure_future(subscription_loop(config, secret, ws_url, topic))
-            # TODO: fix graceful cancelling
-            # loop.add_signal_handler(SIGINT, task.cancel)
-            # loop.add_signal_handler(SIGTERM, task.cancel)
             subscriber_tasks.append(task)
+
+        # create the run all task and graceful termination handling
         try:
-            loop.run_until_complete(run_subscribe_all(subscriber_tasks))
+            logger.debug('Create run all task')
+            run_all_task = asyncio.ensure_future(run_subscribe_all(subscriber_tasks))
+            logger.debug('Add signal handlers to run all task')
+            loop.add_signal_handler(SIGINT, run_all_task.cancel)
+            loop.add_signal_handler(SIGTERM, run_all_task.cancel)
+            loop.run_until_complete(run_all_task)
         except:
             pass

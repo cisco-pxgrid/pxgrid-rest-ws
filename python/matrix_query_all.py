@@ -8,16 +8,8 @@ import json
 
 logger = logging.getLogger(__name__)
 
-###
-# HACK
-import ssl
-ssl._create_default_https_context = ssl._create_unverified_context
-#
-###
 
 def query(config, secret, url, payload):
-    # print('query url=' + url)
-    # print('  request=' + payload)
     handler = urllib.request.HTTPSHandler(context=config.ssl_context)
     opener = urllib.request.build_opener(handler)
     rest_request = urllib.request.Request(url=url, data=str.encode(payload))
@@ -26,8 +18,6 @@ def query(config, secret, url, payload):
     b64 = base64.b64encode((config.node_name + ':' + secret).encode()).decode()
     rest_request.add_header('Authorization', 'Basic ' + b64)
     rest_response = opener.open(rest_request)
-    # print('  response status=' + str(rest_response.getcode()))
-    # print('  response content=' + rest_response.read().decode())
     return rest_response.read().decode()
 
 
@@ -44,7 +34,7 @@ if __name__ == '__main__':
         logger.setLevel(logging.DEBUG)
 
         # and set for stomp and ws_stomp modules also
-        for stomp_mod in ['stomp', 'ws_stomp']:
+        for stomp_mod in ['stomp', 'ws_stomp', 'pxgrid']:
             s_logger = logging.getLogger(stomp_mod)
             handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
             s_logger.addHandler(handler)

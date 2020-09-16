@@ -27,7 +27,7 @@ async def subscribe_loop(config, secret, ws_url, topic):
             message = json.loads(await ws.stomp_read_message())
             print(json.dumps(message, indent=2, sort_keys=True), file=sys.stdout)
             sys.stdout.flush()
-    except CancelledError as e:
+    except asyncio.CancelledError as e:
         pass
     logger.debug('shutting down listener...')
     await ws.stomp_disconnect('123')
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         logger.setLevel(logging.DEBUG)
 
         # and set for stomp and ws_stomp modules also
-        for stomp_mod in ['stomp', 'ws_stomp']:
+        for stomp_mod in ['stomp', 'ws_stomp', 'pxgrid']:
             s_logger = logging.getLogger(stomp_mod)
             handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
             s_logger.addHandler(handler)

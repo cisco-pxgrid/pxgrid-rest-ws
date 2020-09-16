@@ -63,7 +63,7 @@ if __name__ == '__main__':
         logger.setLevel(logging.DEBUG)
 
         # and set for stomp and ws_stomp modules also
-        for stomp_mod in ['stomp', 'ws_stomp']:
+        for stomp_mod in ['stomp', 'ws_stomp', 'pxgrid']:
             s_logger = logging.getLogger(stomp_mod)
             handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
             s_logger.addHandler(handler)

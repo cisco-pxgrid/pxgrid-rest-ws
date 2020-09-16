@@ -9,11 +9,6 @@ logger = logging.getLogger(__name__)
 class PxgridControl:
     def __init__(self, config):
         self.config = config
-        if self.config.verbose:
-            handler = logging.StreamHandler()
-            handler.setFormatter(logging.Formatter('%(asctime)s:%(name)s:%(levelname)s:%(message)s'))
-            logger.addHandler(handler)
-            logger.setLevel(logging.DEBUG)
 
     def send_rest_request(self, url_suffix, payload):
         logger.debug('send_rest_request %s', url_suffix)
