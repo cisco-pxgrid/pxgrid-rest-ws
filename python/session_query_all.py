@@ -62,5 +62,11 @@ if __name__ == '__main__':
 
     secret = pxgrid.get_access_secret(node_name)['secret']
     logger.info('Using access secret %s', secret)
-    resp = query(config, secret, url, '{}')
+    if config.start_timestamp:
+        payload = {
+            'startTimestamp': config.start_timestamp
+        }
+        resp = query(config, secret, url, json.dumps(payload))
+    else:
+        resp = query(config, secret, url, '{}')
     print(json.dumps(json.loads(resp), indent=2, sort_keys=True))

@@ -44,6 +44,9 @@ class Config:
             '--ip', type=str,
             help='Optional IP address for queries')
         parser.add_argument(
+            '--start-timestamp', type=str,
+            help='Optional startTimestamp for queries')
+        parser.add_argument(
             '-v', '--verbose', action='store_true',
             help='Verbose output if relevant')
 
@@ -103,6 +106,10 @@ class Config:
     @property
     def ip(self):
         return self.config.ip
+
+    @property
+    def start_timestamp(self):
+        return self.config.start_timestamp
 
     @property
     def description(self):

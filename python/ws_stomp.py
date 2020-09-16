@@ -23,7 +23,7 @@ class WebSocketStomp:
                                            ssl=self.ssl_ctx)
 
     async def stomp_connect(self, hostname):
-        # print('STOMP CONNECT host=' + hostname)
+        logger.debug('STOMP CONNECT host=%s', hostname)
         frame = StompFrame()
         frame.set_command("CONNECT")
         frame.set_header('accept-version', '1.2')
@@ -34,7 +34,7 @@ class WebSocketStomp:
         logger.debug('stomp_connect completed')
 
     async def stomp_subscribe(self, topic):
-        # print('STOMP SUBSCRIBE topic=' + topic)
+        logger.debug('STOMP SUBSCRIBE topic=%s', topic)
         frame = StompFrame()
         frame.set_command("SUBSCRIBE")
         frame.set_header('destination', topic)

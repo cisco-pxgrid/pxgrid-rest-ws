@@ -70,6 +70,8 @@ async def default_subscription_loop(config, secret, ws_url, topic):
     Simple subscription loop just to display whatever events arrive.
     '''
     logger.debug('starting subscription to %s at %s', topic, ws_url)
+    if not node_name:
+        node_name = config.node_name
     ws = WebSocketStomp(ws_url, config.node_name, secret, config.ssl_context)
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
