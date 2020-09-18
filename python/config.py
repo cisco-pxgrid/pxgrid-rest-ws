@@ -21,6 +21,8 @@ class Config:
                             help='Client key password (optional)')
         parser.add_argument('-s', '--servercert',
                             help='Server certificates pem filename')
+        parser.add_argument('--insecure', action='store_true',
+                            help='Allow insecure server connections when using SSL')
         parser.add_argument('--service', type=str,
                             help='Service name')
         parser.add_argument('--topic', type=str,
@@ -126,8 +128,7 @@ class Config:
                     password=self.config.clientkeypassword)
             if self.config.servercert:
                 self.__ssl_context.load_verify_locations(cafile=self.config.servercert)
-            else:
-                warnings.warn("check_hostname and cert not used; unsafe for production use")
+            elif self.config.insecure:
                 self.__ssl_context.check_hostname = False
                 self.__ssl_context.verify_mode = ssl.CERT_NONE
         return self.__ssl_context
