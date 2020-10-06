@@ -49,6 +49,15 @@ class Config:
             '--start-timestamp', type=str,
             help='Optional startTimestamp for queries')
         parser.add_argument(
+            '--mac-address', type=str,
+            help='Optional MAC address for ANC policies')
+        parser.add_argument(
+            '--anc-policy', type=str,
+            help='Optional ANC policy name')
+        parser.add_argument(
+            '--nas-ip-address', type=str,
+            help='Optional NAS IP address for ANC policies')
+        parser.add_argument(
             '-v', '--verbose', action='store_true',
             help='Verbose output if relevant')
 
@@ -112,6 +121,18 @@ class Config:
     @property
     def start_timestamp(self):
         return self.config.start_timestamp
+
+    @property
+    def mac_address(self):
+        return self.config.mac_address
+
+    @property
+    def anc_policy(self):
+        return self.config.anc_policy
+
+    @property
+    def nas_ip_address(self):
+        return self.config.nas_ip_address
 
     @property
     def description(self):
