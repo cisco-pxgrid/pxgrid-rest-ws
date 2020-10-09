@@ -54,7 +54,7 @@ class WebSocketStomp:
         out = StringIO()
         frame.write(out)
         await self.ws.send(out.getvalue().encode('utf-8'))
-        logger.debug('stomp_sned completed')
+        logger.debug('stomp_send completed')
 
     # only returns for MESSAGE
     async def stomp_read_message(self):
