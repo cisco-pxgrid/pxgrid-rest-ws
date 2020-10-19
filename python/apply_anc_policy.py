@@ -49,8 +49,13 @@ if __name__ == '__main__':
     service_lookup_response = pxgrid.service_lookup('com.cisco.ise.config.anc')
     service = service_lookup_response['services'][0]
     node_name = service['nodeName']
-    # url = service['properties']['restBaseUrl'] + '/applyEndpointByMacAddress'
-    url = service['properties']['restBaseUrl'] + '/applyEndpointPolicy'
+
+    if config.apply_anc_policy:
+        url = service['properties']['restBaseUrl'] + '/applyEndpointPolicy'
+    elif config.clear_anc_policy:
+        url = service['properties']['restBaseUrl'] + '/clearEndpointPolicy'
+    else:
+        url = service['properties']['restBaseUrl'] + '/applyEndpointPolicy'
 
     # log url to see what we get via discovery
     logger.info('Using URL %s', url)

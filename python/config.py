@@ -48,6 +48,15 @@ class Config:
         parser.add_argument(
             '--start-timestamp', type=str,
             help='Optional startTimestamp for queries')
+
+        # options for applying and clearing ANC policies
+        g = parser.add_mutually_exclusive_group()
+        g.add_argument(
+            '--apply-anc-policy', action='store_true',
+            help='Apply ANC policy with a policy name, MAC address and NAS IP address')
+        g.add_argument(
+            '--clear-anc-policy', action='store_true',
+            help='Clear ANC policy with a policy name, MAC address and NAS IP address')
         parser.add_argument(
             '--mac-address', type=str,
             help='Optional MAC address for ANC policies')
@@ -122,6 +131,14 @@ class Config:
     def start_timestamp(self):
         return self.config.start_timestamp
 
+    @property
+    def apply_anc_policy(self):
+        return self.config.apply_anc_policy
+        
+    @property
+    def clear_anc_policy(self):
+        return self.config.clear_anc_policy
+        
     @property
     def mac_address(self):
         return self.config.mac_address
