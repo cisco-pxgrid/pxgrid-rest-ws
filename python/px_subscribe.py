@@ -45,6 +45,7 @@ SERVICE_NAMES = [
     "com.cisco.ise.session",
     "com.cisco.ise.config.anc",
     "com.cisco.endpoint.asset",
+    "com.cisco.endpoint",
     "com.cisco.ise.radius",
     "com.cisco.ise.system",
     "com.cisco.ise.sxp",
@@ -61,11 +62,11 @@ async def future_read_message(ws, future):
         logger.debug('Websocket connection closed')
 
 
-async def default_subscription_loop(config, secret, ws_url, topic):
+async def default_subscription_loop(config, secret, pubsub_node_name, ws_url, topic):
     '''
     Simple subscription loop just to display whatever events arrive.
     '''
-    logger.debug('starting subscription to %s at %s', topic, ws_url)
+    logger.debug('default_subscription_loop: starting subscription to %s at %s', topic, ws_url)
     ws = WebSocketStomp(ws_url, config.node_name, secret, config.ssl_context)
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
@@ -73,6 +74,7 @@ async def default_subscription_loop(config, secret, ws_url, topic):
     try:
         while True:
             message = json.loads(await ws.stomp_read_message())
+            logger.debug('[%s] message received', pubsub_node_name)
             print(json.dumps(message, indent=2, sort_keys=True), file=sys.stdout)
             sys.stdout.flush()
     except asyncio.CancelledError as e:
@@ -83,7 +85,7 @@ async def default_subscription_loop(config, secret, ws_url, topic):
     await ws.disconnect()
 
 
-async def session_dedup_loop(config, secret, ws_url, topic):
+async def session_dedup_loop(config, secret, pubsub_node_name, ws_url, topic):
     '''
     Subscription loop specifically for ISE pxGrid sessionTopic events. The
     logic for de-duplication is based around callingStationId, timestamp and
@@ -97,7 +99,7 @@ async def session_dedup_loop(config, secret, ws_url, topic):
     uses MD5 (for speed) on a key-sorted dump of the event (which ensures that
     duplicate events are detected by the hash digest differing.)
     '''
-    logger.debug('starting subscription to %s at %s', topic, ws_url)
+    logger.debug('session_dedup_loop: starting subscription to %s at %s', topic, ws_url)
     assert topic == '/topic/com.cisco.ise.session', '%s is not the sessionTopic'
 
     ws = WebSocketStomp(ws_url, config.node_name, secret, config.ssl_context)
@@ -107,6 +109,7 @@ async def session_dedup_loop(config, secret, ws_url, topic):
     try:
         while True:
             message = json.loads(await ws.stomp_read_message())
+            logger.debug('[%s] message received', pubsub_node_name)
             with dedup_lock:
                 for s in message['sessions']:
                     event_text = json.dumps(s, indent=2, sort_keys=True)
@@ -286,7 +289,7 @@ if __name__ == '__main__':
         ws_url = pubsub_service['properties']['wsUrl']
 
         loop = asyncio.get_event_loop()
-        main_task = asyncio.ensure_future(subscription_loop(config, secret, ws_url, topic))
+        main_task = asyncio.ensure_future(subscription_loop(config, secret, pubsub_node_name, ws_url, topic))
         loop.add_signal_handler(SIGINT, main_task.cancel)
         loop.add_signal_handler(SIGTERM, main_task.cancel)
         try:
@@ -303,7 +306,8 @@ if __name__ == '__main__':
             pubsub_node_name = pubsub_service['nodeName']
             secret = pxgrid.get_access_secret(pubsub_node_name)['secret']
             ws_url = pubsub_service['properties']['wsUrl']
-            task = asyncio.ensure_future(subscription_loop(config, secret, ws_url, topic))
+            logger.debug('creating task to subscribe to %s', ws_url)
+            task = asyncio.ensure_future(subscription_loop(config, secret, pubsub_node_name, ws_url, topic))
             subscriber_tasks.append(task)
 
         # create the run all task and graceful termination handling
