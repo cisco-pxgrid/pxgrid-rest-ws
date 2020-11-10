@@ -52,11 +52,27 @@ class Config:
         # options for applying and clearing ANC policies
         g = parser.add_mutually_exclusive_group()
         g.add_argument(
-            '--apply-anc-policy', action='store_true',
-            help='Apply ANC policy with a policy name, MAC address and NAS IP address')
+            '--get-anc-endpoints', action='store_true',
+            help='Get endpoints with ANC policies')
         g.add_argument(
-            '--clear-anc-policy', action='store_true',
-            help='Clear ANC policy with a policy name, MAC address and NAS IP address')
+            '--get-anc-endpoint-by-mac', action='store_true',
+            help='Get endpoints with ANC policy by MAC address')
+        g.add_argument(
+            '--get-anc-policies', action='store_true',
+            help='Get all ANC policies')
+        g.add_argument(
+            '--apply-anc-policy-by-mac', action='store_true',
+            help='Apply named ANC policy by endpoint MAC address')
+        g.add_argument(
+            '--apply-anc-policy-by-ip', action='store_true',
+            help='Apply named ANC policy by endpoint IP address')
+        g.add_argument(
+            '--clear-anc-policy-by-mac', action='store_true',
+            help='Clear ANC policy by endpoint MAC address')
+        g.add_argument(
+            '--clear-anc-policy-by-ip', action='store_true',
+            help='Clear ANC policy by endpoint IP address')
+        
         parser.add_argument(
             '--mac-address', type=str,
             help='Optional MAC address for ANC policies')
@@ -132,12 +148,32 @@ class Config:
         return self.config.start_timestamp
 
     @property
-    def apply_anc_policy(self):
-        return self.config.apply_anc_policy
+    def get_anc_endpoints(self):
+        return self.config.get_anc_endpoints
         
     @property
-    def clear_anc_policy(self):
-        return self.config.clear_anc_policy
+    def get_anc_endpoint_by_mac(self):
+        return self.config.get_anc_endpoint_by_mac
+        
+    @property
+    def get_anc_policies(self):
+        return self.config.get_anc_policies
+        
+    @property
+    def apply_anc_policy_by_mac(self):
+        return self.config.apply_anc_policy_by_mac
+        
+    @property
+    def apply_anc_policy_by_ip(self):
+        return self.config.apply_anc_policy_by_ip
+        
+    @property
+    def clear_anc_policy_by_mac(self):
+        return self.config.clear_anc_policy_by_mac
+        
+    @property
+    def clear_anc_policy_by_ip(self):
+        return self.config.clear_anc_policy_by_ip
         
     @property
     def mac_address(self):
@@ -146,6 +182,10 @@ class Config:
     @property
     def anc_policy(self):
         return self.config.anc_policy
+
+    @property
+    def anc_ip_address(self):
+        return self.config.anc_ip_address
 
     @property
     def nas_ip_address(self):

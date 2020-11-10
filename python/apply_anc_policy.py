@@ -5,6 +5,8 @@ import base64
 import time
 import logging
 import json
+import sys
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,25 +52,42 @@ if __name__ == '__main__':
     service = service_lookup_response['services'][0]
     node_name = service['nodeName']
 
-    if config.apply_anc_policy:
-        url = service['properties']['restBaseUrl'] + '/applyEndpointPolicy'
-    elif config.clear_anc_policy:
-        url = service['properties']['restBaseUrl'] + '/clearEndpointPolicy'
-    else:
-        url = service['properties']['restBaseUrl'] + '/applyEndpointPolicy'
-
-    # log url to see what we get via discovery
-    logger.info('Using URL %s', url)
 
     secret = pxgrid.get_access_secret(node_name)['secret']
     logger.info('Using access secret %s', secret)
     payload = {}
-    if config.mac_address:
+
+    if config.get_anc_endpoints:
+        url = service['properties']['restBaseUrl'] + '/getEndpoints'
+    elif config.get_anc_endpoint_by_mac:
+        url = service['properties']['restBaseUrl'] + '/getEndpointByMacAddress'
         payload['macAddress'] = config.mac_address
-    if config.anc_policy:
+    elif config.get_anc_policies:
+        url = service['properties']['restBaseUrl'] + '/getPolicies'
+    elif config.apply_anc_policy_by_mac:
+        url = service['properties']['restBaseUrl'] + '/applyEndpointByMacAddress'
+        payload['macAddress'] = config.mac_address
         payload['policyName'] = config.anc_policy
-    if config.nas_ip_address:
-        payload['nasIpAddress'] = config.nas_ip_address
+    elif config.apply_anc_policy_by_ip:
+        url = service['properties']['restBaseUrl'] + '/applyEndpointByIpAddress'
+        payload['ipAddress'] = config.anc_ip_address
+        payload['policyName'] = config.anc_policy
+    elif config.clear_anc_policy_by_mac:
+        url = service['properties']['restBaseUrl'] + '/clearEndpointByMacAddress'
+        payload['macAddress'] = config.mac_address
+    elif config.clear_anc_policy_by_ip:
+        url = service['properties']['restBaseUrl'] + '/clearEndpointByIpAddress'
+        payload['ipAddress'] = config.anc_ip_address
+    elif config.get_anc_policy_by_mac:
+        url = service['properties']['restBaseUrl'] + '/getEndpointByMacAddress'
+    else:
+        logger.debug('no valid options for getting, applying or removing ANC policy')
+        sys.exit(1)
+
+    # log url to see what we get via discovery
+    logger.info('Using URL %s', url)
+
+    # make the request!!
     payload = json.dumps(payload)
     logger.info('payload = %s', payload)
     resp = query(config, secret, url, payload)
