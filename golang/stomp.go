@@ -53,9 +53,11 @@ func (stomp *Stomp) Parse(reader *bytes.Reader) error {
 		arr := strings.SplitN(line, ":", 2)
 		stomp.headers[arr[0]] = arr[1]
 	}
-	stomp.content, err = buf.ReadBytes(0)
+	b, err := buf.ReadBytes(0)
 	if err != nil {
 		return err
 	}
+	// strip ending zero byte
+	stomp.content = b[:len(b)-1]
 	return nil
 }
