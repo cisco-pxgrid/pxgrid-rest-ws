@@ -90,7 +90,7 @@ public class SampleConfiguration {
 		return tmf.getTrustManagers();
 	}
 
-	public void parse(String[] args) throws ParseException, IOException, GeneralSecurityException {
+	public String[] parse(String[] args) throws ParseException, IOException, GeneralSecurityException {
 		CommandLineParser parser = new DefaultParser();
 		CommandLine cmd = parser.parse(options, args);
 		
@@ -124,7 +124,8 @@ public class SampleConfiguration {
 				System.out.println("  " + option.getLongOpt() + " = (not specified)");
 			}
 		}
-        System.out.println("--------------------");
+		System.out.println("--------------------");
+		return cmd.getArgs();
 	}
 	
 	public void printHelp(String commandLineSyntax) {
