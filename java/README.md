@@ -6,7 +6,7 @@ Convert ISE pxGrid generated certificates from PEM to JKS using jks-converter:
   5. Enter password and download jks.zip
   6. The jks.zip contains keycert.jks and trust.jks
 
-Running Loss detection for SessionSubscribe with maven
+Running Loss detection for SessionSubscribe with maven:
 
 `mvn exec:java -Dexec.mainClass="com.cisco.pxgrid.samples.ise.lossdetection.sessiondirectory.SessionSubscribeLossDetection" -Dexec.args="-a <hostname> -u <nodename> -k <keycert.jks> -p <keycert.jks password> -t <trust.jks> -q <trust.jks password>"`
 
