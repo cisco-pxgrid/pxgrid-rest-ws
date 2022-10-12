@@ -1,0 +1,4 @@
+# github.com/gorilla/websocket v1.5.0 => github.com/philipatl/websocket v1.4.3-0.20211206152948-d16969baa130
+## explicit; go 1.12
+github.com/gorilla/websocket
+# github.com/gorilla/websocket => github.com/philipatl/websocket v1.4.3-0.20211206152948-d16969baa130

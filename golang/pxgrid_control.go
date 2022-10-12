@@ -51,6 +51,7 @@ func NewControl(config *Config) (control *Control, err error) {
 	}
 	transport := &http.Transport{
 		TLSClientConfig: tlsConfig,
+		Proxy:           http.ProxyFromEnvironment,
 	}
 	control = &Control{
 		config: config,
