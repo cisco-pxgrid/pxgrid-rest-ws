@@ -35,6 +35,7 @@ func NewEndpoint(config *Config) (endpoint *Endpoint, err error) {
 	}
 	endpoint.dialer = websocket.Dialer{
 		TLSClientConfig: tlsConfig,
+		Proxy:           http.ProxyFromEnvironment,
 	}
 	return
 }

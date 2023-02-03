@@ -51,6 +51,7 @@ func NewControl(config *Config) (control *Control, err error) {
 	}
 	transport := &http.Transport{
 		TLSClientConfig: tlsConfig,
+		Proxy:           http.ProxyFromEnvironment,
 	}
 	control = &Control{
 		config: config,
@@ -76,7 +77,7 @@ func (control *Control) sendRequest(url string, request interface{}, response in
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
 
-	req.SetBasicAuth(control.config.nodeName, "")
+	req.SetBasicAuth(control.config.nodeName, control.config.password)
 	resp, err := control.client.Do(req)
 	if err != nil {
 		return
