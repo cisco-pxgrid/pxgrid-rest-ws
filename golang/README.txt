@@ -4,12 +4,8 @@ Download using golang website:
 Or use brew on MacOS
 > brew install go
 
-Install websocket library. Set GOPATH go where golang packages can be stored:
-> export GOPATH="..."
-> go get github.com/gorilla/websocket
-
 Build sample session_subscribe:
-> go build session_subscribe.go config.go pxgrid_control.go pubsub_endpoint.go stomp.go 
+> go build
 
 The quickest way to get started is to generate a pxGrid client cert on Cisco ISE.  
 Use PEM/PKCS8 format for Certificate Download format.
