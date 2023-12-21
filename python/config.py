@@ -19,6 +19,8 @@ class Config:
                             help='Client key password (optional)')
         parser.add_argument('-s', '--servercert',
                             help='Server certificates pem filename')
+        parser.add_argument('-f', '--filter',
+                            help = 'Server Side Filter (optional)')
         self.config = parser.parse_args()
 
     def get_host_name(self):
@@ -44,3 +46,6 @@ class Config:
                                     password=self.config.clientkeypassword)
         context.load_verify_locations(cafile=self.config.servercert)
         return context
+
+    def get_filter(self):
+        return self.config.filter

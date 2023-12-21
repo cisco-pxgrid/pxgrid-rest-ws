@@ -34,5 +34,8 @@ if __name__ == '__main__':
 
     secret = pxgrid.get_access_secret(node_name)['secret']
 
-    query(config, secret, url, '{}')
+    if config.get_filter() is not None:
+        query(config, secret, url, '{"filter": "' + config.get_filter() + '"}')
+    else:
+        query(config, secret, url, '{}')
 

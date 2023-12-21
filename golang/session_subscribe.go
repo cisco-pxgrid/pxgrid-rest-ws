@@ -81,7 +81,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = endpoint.Subscribe(sessionTopic)
+	err = endpoint.Subscribe(sessionTopic, config.filter)
 	if err != nil {
 		log.Fatal(err)
 	}

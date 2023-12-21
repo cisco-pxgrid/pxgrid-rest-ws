@@ -66,11 +66,14 @@ func (e *Endpoint) Connect(url, user, password string) (err error) {
 	return
 }
 
-func (e *Endpoint) Subscribe(topic string) (err error) {
+func (e *Endpoint) Subscribe(topic string, filter string) (err error) {
 	stomp := NewStomp()
 	stomp.command = "SUBSCRIBE"
 	stomp.headers["destination"] = topic
 	stomp.headers["id"] = "0"
+	if filter != "" {
+		stomp.headers["filter"] = filter
+	}
 	var out bytes.Buffer
 	stomp.Write(&out)
 	return e.ws.WriteMessage(websocket.BinaryMessage, out.Bytes())

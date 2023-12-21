@@ -16,6 +16,7 @@ type Config struct {
 	password    string
 	caFile      string
 	insecure    bool
+	filter      string
 }
 
 func NewConfig() *Config {
@@ -23,6 +24,7 @@ func NewConfig() *Config {
 	flag.StringVar(&c.hostName, "a", "", "Host name (multiple accepted)")
 	flag.StringVar(&c.nodeName, "n", "", "Node name")
 	flag.StringVar(&c.description, "d", "", "Description (optional)")
+	flag.StringVar(&c.filter, "f", "", "Server Side Filter (optional)")
 	flag.StringVar(&c.certFile, "c", "", "Client certificate chain .pem filename (not required if password is specified)")
 	flag.StringVar(&c.keyFile, "k", "", "Client key unencrypted .key filename (not required if password is specified)")
 	flag.StringVar(&c.password, "w", "", "Password (not required if client certificate is specified)")

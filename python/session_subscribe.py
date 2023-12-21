@@ -19,7 +19,7 @@ async def future_read_message(ws, future):
         print('Websocket connection closed')
 
 async def subscribe_loop(config, secret, ws_url, topic):
-    ws = WebSocketStomp(ws_url, config.get_node_name(), secret, config.get_ssl_context())
+    ws = WebSocketStomp(ws_url, config.get_node_name(), secret, config.get_ssl_context(),config.get_filter())
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
     await ws.stomp_subscribe(topic)
