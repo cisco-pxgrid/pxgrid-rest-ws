@@ -34,6 +34,7 @@ public class StompSubscription {
 		message.setCommand(StompFrame.Command.SUBSCRIBE);
 		message.setHeader("destination", topic);
 		message.setHeader("id", id);
+//		message.setHeader("filter", "nasIpAddress=='10.0.0.2'");
 		return message;
 	}
 }

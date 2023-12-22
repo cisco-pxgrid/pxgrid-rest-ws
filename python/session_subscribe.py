@@ -22,7 +22,7 @@ async def subscribe_loop(config, secret, ws_url, topic):
     ws = WebSocketStomp(ws_url, config.get_node_name(), secret, config.get_ssl_context())
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
-    await ws.stomp_subscribe(topic)
+    await ws.stomp_subscribe(topic,config.get_filter())
     print("Ctrl-C to disconnect...")
     while True:
         future = asyncio.Future()

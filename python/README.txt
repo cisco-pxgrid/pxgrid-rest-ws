@@ -30,7 +30,8 @@ The pxGrid python samples demonstrate how to develop pxGrid clients in python.
                         Client key password (optional)
   -s SERVERCERT, --servercert SERVERCERT
                         Server certificate pem filename
-
+  -f FILTER, --filter FILTER
+                       Server Side Filter (optional)
 * Generate pxGrid Certificates from ISE:
     - Navigate to ISE Admin GUI via any web browser and login
     - Navigate to Administration -> pxGrid Services

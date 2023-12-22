@@ -30,12 +30,14 @@ class WebSocketStomp:
         frame.write(out)
         await self.ws.send(out.getvalue().encode('utf-8'))
 
-    async def stomp_subscribe(self, topic):
+    async def stomp_subscribe(self, topic, filter):
         print('STOMP SUBSCRIBE topic=' + topic)
         frame = StompFrame()
         frame.set_command("SUBSCRIBE")
         frame.set_header('destination', topic)
         frame.set_header('id', 'my-id')
+        if filter is not None:
+            frame.set_header('filter', filter)
         out = StringIO()
         frame.write(out)
         await self.ws.send(out.getvalue().encode('utf-8'))
