@@ -5,12 +5,11 @@ from stomp import StompFrame
 
 
 class WebSocketStomp:
-    def __init__(self, ws_url, user, password, ssl_ctx, filter):
+    def __init__(self, ws_url, user, password, ssl_ctx):
         self.ws_url = ws_url
         self.user = user
         self.password = password
         self.ssl_ctx = ssl_ctx
-        self.filter = filter
         self.ws = None
 
     async def connect(self):
@@ -31,14 +30,14 @@ class WebSocketStomp:
         frame.write(out)
         await self.ws.send(out.getvalue().encode('utf-8'))
 
-    async def stomp_subscribe(self, topic):
+    async def stomp_subscribe(self, topic, filter):
         print('STOMP SUBSCRIBE topic=' + topic)
         frame = StompFrame()
         frame.set_command("SUBSCRIBE")
         frame.set_header('destination', topic)
         frame.set_header('id', 'my-id')
-        if self.filter is not None:
-            frame.set_header('filter', self.filter)
+        if filter is not None:
+            frame.set_header('filter', filter)
         out = StringIO()
         frame.write(out)
         await self.ws.send(out.getvalue().encode('utf-8'))
