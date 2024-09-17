@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -96,7 +97,7 @@ func (control *Control) sendRequest(url string, request interface{}, response in
 }
 
 func (control *Control) AccountActivate() (response *AccountActivateResponse, err error) {
-	url := "https://" + control.config.hostName + ":8910/pxgrid/control/AccountActivate"
+	url := "https://" + control.config.hostName + ":" + strconv.Itoa(control.config.port) + "/pxgrid/control/AccountActivate"
 	request := AccountActivateRequest{}
 	response = &AccountActivateResponse{}
 	err = control.sendRequest(url, request, response)
@@ -104,7 +105,7 @@ func (control *Control) AccountActivate() (response *AccountActivateResponse, er
 }
 
 func (control *Control) ServiceLookup(serviceName string) (services []Service, err error) {
-	url := "https://" + control.config.hostName + ":8910/pxgrid/control/ServiceLookup"
+	url := "https://" + control.config.hostName + ":" + strconv.Itoa(control.config.port) + "/pxgrid/control/ServiceLookup"
 	request := ServiceLookupRequest{serviceName}
 	response := &ServiceLookupResponse{}
 	err = control.sendRequest(url, request, response)
@@ -116,7 +117,7 @@ func (control *Control) ServiceLookup(serviceName string) (services []Service, e
 }
 
 func (control *Control) GetAccessSecret(peerNode string) (secret string, err error) {
-	url := "https://" + control.config.hostName + ":8910/pxgrid/control/AccessSecret"
+	url := "https://" + control.config.hostName + ":" + strconv.Itoa(control.config.port) + "/pxgrid/control/AccessSecret"
 	request := AccessSecretRequest{peerNode}
 	response := &AccessSecretResponse{}
 	err = control.sendRequest(url, request, response)

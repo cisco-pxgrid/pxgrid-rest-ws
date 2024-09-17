@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	hostName    string
+	port        int
 	nodeName    string
 	description string
 	certFile    string
@@ -22,6 +23,7 @@ type Config struct {
 func NewConfig() *Config {
 	c := &Config{}
 	flag.StringVar(&c.hostName, "a", "", "Host name (multiple accepted)")
+	flag.IntVar(&c.port, "p", 8910, "Port")
 	flag.StringVar(&c.nodeName, "n", "", "Node name")
 	flag.StringVar(&c.description, "d", "", "Description (optional)")
 	flag.StringVar(&c.filter, "f", "", "Server Side Filter (optional)")
