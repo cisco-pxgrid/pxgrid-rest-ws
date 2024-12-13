@@ -1,2 +1,2 @@
-websockets >= 3.3
-
+websockets >= 15
+json-stream >= 2

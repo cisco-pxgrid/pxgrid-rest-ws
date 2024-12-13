@@ -3,21 +3,31 @@ from config import Config
 import urllib.request
 import base64
 import time
+import json_stream
 
 
-def query(config, secret, url, payload):
-    print('query url=' + url)
-    print('  request=' + payload)
+def query_and_stream_print(config, secret, url, payload):
+    print('query url=' + url + ' payload=' + payload)
     handler = urllib.request.HTTPSHandler(context=config.get_ssl_context())
     opener = urllib.request.build_opener(handler)
-    rest_request = urllib.request.Request(url=url, data=str.encode(payload))
-    rest_request.add_header('Content-Type', 'application/json')
-    rest_request.add_header('Accept', 'application/json')
-    b64 = base64.b64encode((config.get_node_name() + ':' + secret).encode()).decode()
-    rest_request.add_header('Authorization', 'Basic ' + b64)
-    rest_response = opener.open(rest_request)
-    print('  response status=' + str(rest_response.getcode()))
-    print('  response content=' + rest_response.read().decode())
+    req = urllib.request.Request(url=url, data=str.encode(payload))
+    req.add_header('Content-Type', 'application/json')
+    req.add_header('Accept', 'application/json')
+    credentials = f"{config.get_node_name()}:{secret}"
+    b64 = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+    req.add_header('Authorization', 'Basic ' + b64)
+    resp = opener.open(req)
+
+    if resp.status == 200:
+        session_count = 0
+        data = json_stream.load(resp)
+        for session in data['sessions'].persistent():
+            session_count += 1
+            print(f'Session {session_count}: {dict(session)}')
+        print(f'Total sessions processed: {session_count}')
+    else:
+        print('Error response status=' + str(resp.status))
+
 
 if __name__ == '__main__':
     config = Config()
@@ -35,7 +45,7 @@ if __name__ == '__main__':
     secret = pxgrid.get_access_secret(node_name)['secret']
 
     if config.get_filter() is not None:
-        query(config, secret, url, '{"filter": "' + config.get_filter() + '"}')
+        query_and_stream_print(config, secret, url,
+                               '{"filter": "' + config.get_filter() + '"}')
     else:
-        query(config, secret, url, '{}')
-
+        query_and_stream_print(config, secret, url, '{}')

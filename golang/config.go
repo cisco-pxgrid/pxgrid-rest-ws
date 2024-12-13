@@ -4,12 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
-	"io/ioutil"
+	"os"
 )
 
 type Config struct {
 	hostName    string
-	port        int
 	nodeName    string
 	description string
 	certFile    string
@@ -18,15 +17,18 @@ type Config struct {
 	caFile      string
 	insecure    bool
 	filter      string
+	service     string
+	topic       string
 }
 
 func NewConfig() *Config {
 	c := &Config{}
 	flag.StringVar(&c.hostName, "a", "", "Host name (multiple accepted)")
-	flag.IntVar(&c.port, "p", 8910, "Port")
 	flag.StringVar(&c.nodeName, "n", "", "Node name")
 	flag.StringVar(&c.description, "d", "", "Description (optional)")
 	flag.StringVar(&c.filter, "f", "", "Server Side Filter (optional)")
+	flag.StringVar(&c.service, "service", "com.cisco.ise.session", "Service name (optional)")
+	flag.StringVar(&c.topic, "topic", "sessionTopic", "Topic name (optional)")
 	flag.StringVar(&c.certFile, "c", "", "Client certificate chain .pem filename (not required if password is specified)")
 	flag.StringVar(&c.keyFile, "k", "", "Client key unencrypted .key filename (not required if password is specified)")
 	flag.StringVar(&c.password, "w", "", "Password (not required if client certificate is specified)")
@@ -37,6 +39,10 @@ func NewConfig() *Config {
 }
 
 func (config *Config) GetTLSConfig() (*tls.Config, error) {
+	if config.insecure {
+		return &tls.Config{InsecureSkipVerify: true}, nil
+	}
+
 	var clientCert []tls.Certificate
 	if config.certFile != "" {
 		cert, err := tls.LoadX509KeyPair(config.certFile, config.keyFile)
@@ -46,7 +52,7 @@ func (config *Config) GetTLSConfig() (*tls.Config, error) {
 		clientCert = []tls.Certificate{cert}
 	}
 
-	caCert, err := ioutil.ReadFile(config.caFile)
+	caCert, err := os.ReadFile(config.caFile)
 	if err != nil {
 		return nil, err
 	}
@@ -54,9 +60,8 @@ func (config *Config) GetTLSConfig() (*tls.Config, error) {
 	caCertPool.AppendCertsFromPEM(caCert)
 
 	tlsConfig := &tls.Config{
-		Certificates:       clientCert,
-		RootCAs:            caCertPool,
-		InsecureSkipVerify: config.insecure,
+		Certificates: clientCert,
+		RootCAs:      caCertPool,
 	}
 
 	return tlsConfig, err

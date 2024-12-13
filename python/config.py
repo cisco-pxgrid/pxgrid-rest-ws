@@ -20,7 +20,9 @@ class Config:
         parser.add_argument('-s', '--servercert',
                             help='Server certificates pem filename')
         parser.add_argument('-f', '--filter',
-                            help = 'Server Side Filter (optional)')
+                            help='Server Side Filter (optional)')
+        parser.add_argument('--insecure', action='store_true',
+                            help='Insecure (optional)')
         self.config = parser.parse_args()
 
     def get_host_name(self):
@@ -39,12 +41,15 @@ class Config:
         return self.config.description
 
     def get_ssl_context(self):
-        context = ssl.create_default_context()
-        if self.config.clientcert is not None:
-            context.load_cert_chain(certfile=self.config.clientcert,
-                                    keyfile=self.config.clientkey,
-                                    password=self.config.clientkeypassword)
-        context.load_verify_locations(cafile=self.config.servercert)
+        if self.config.insecure:
+            context = ssl._create_unverified_context()
+        else:
+            context = ssl.create_default_context()
+            if self.config.clientcert is not None:
+                context.load_cert_chain(certfile=self.config.clientcert,
+                                        keyfile=self.config.clientkey,
+                                        password=self.config.clientkeypassword)
+            context.load_verify_locations(cafile=self.config.servercert)
         return context
 
     def get_filter(self):

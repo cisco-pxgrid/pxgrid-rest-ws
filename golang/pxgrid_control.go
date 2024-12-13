@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -52,8 +52,8 @@ func NewControl(config *Config) (control *Control, err error) {
 	}
 	transport := &http.Transport{
 		TLSClientConfig: tlsConfig,
-		Proxy:           http.ProxyFromEnvironment,
 	}
+
 	control = &Control{
 		config: config,
 		client: &http.Client{Transport: transport},
@@ -77,14 +77,14 @@ func (control *Control) sendRequest(url string, request interface{}, response in
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/json")
-
-	req.SetBasicAuth(control.config.nodeName, control.config.password)
+	// basic auth user and password in base64
+	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(control.config.nodeName+":"+control.config.password)))
 	resp, err := control.client.Do(req)
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
-	responseBytes, err := ioutil.ReadAll(resp.Body)
+	responseBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
@@ -97,7 +97,7 @@ func (control *Control) sendRequest(url string, request interface{}, response in
 }
 
 func (control *Control) AccountActivate() (response *AccountActivateResponse, err error) {
-	url := "https://" + control.config.hostName + ":" + strconv.Itoa(control.config.port) + "/pxgrid/control/AccountActivate"
+	url := "https://" + control.config.hostName + ":8910/pxgrid/control/AccountActivate"
 	request := AccountActivateRequest{}
 	response = &AccountActivateResponse{}
 	err = control.sendRequest(url, request, response)
@@ -105,7 +105,7 @@ func (control *Control) AccountActivate() (response *AccountActivateResponse, er
 }
 
 func (control *Control) ServiceLookup(serviceName string) (services []Service, err error) {
-	url := "https://" + control.config.hostName + ":" + strconv.Itoa(control.config.port) + "/pxgrid/control/ServiceLookup"
+	url := "https://" + control.config.hostName + ":8910/pxgrid/control/ServiceLookup"
 	request := ServiceLookupRequest{serviceName}
 	response := &ServiceLookupResponse{}
 	err = control.sendRequest(url, request, response)
@@ -117,7 +117,7 @@ func (control *Control) ServiceLookup(serviceName string) (services []Service, e
 }
 
 func (control *Control) GetAccessSecret(peerNode string) (secret string, err error) {
-	url := "https://" + control.config.hostName + ":" + strconv.Itoa(control.config.port) + "/pxgrid/control/AccessSecret"
+	url := "https://" + control.config.hostName + ":8910/pxgrid/control/AccessSecret"
 	request := AccessSecretRequest{peerNode}
 	response := &AccessSecretResponse{}
 	err = control.sendRequest(url, request, response)

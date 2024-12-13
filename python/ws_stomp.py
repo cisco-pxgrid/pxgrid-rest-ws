@@ -16,7 +16,7 @@ class WebSocketStomp:
         b64 = base64.b64encode(
             (self.user + ':' + self.password).encode()).decode()
         self.ws = await websockets.connect(uri=self.ws_url,
-                                           extra_headers={
+                                           additional_headers={
                                                'Authorization': 'Basic ' + b64},
                                            ssl=self.ssl_ctx)
 

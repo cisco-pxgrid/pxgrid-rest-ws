@@ -1,9 +1,6 @@
 import asyncio
 import json
-import signal
-import sys
 import time
-from asyncio.tasks import FIRST_COMPLETED
 
 from config import Config
 from pxgrid import PxgridControl
@@ -11,33 +8,28 @@ from websockets import ConnectionClosed
 from ws_stomp import WebSocketStomp
 
 
-async def future_read_message(ws, future):
-    try:
-        message = await ws.stomp_read_message()
-        future.set_result(message)
-    except ConnectionClosed:
-        print('Websocket connection closed')
-
 async def subscribe_loop(config, secret, ws_url, topic):
-    ws = WebSocketStomp(ws_url, config.get_node_name(), secret, config.get_ssl_context())
+    ws = WebSocketStomp(ws_url, config.get_node_name(),
+                        secret, config.get_ssl_context())
     await ws.connect()
     await ws.stomp_connect(pubsub_node_name)
-    await ws.stomp_subscribe(topic,config.get_filter())
-    print("Ctrl-C to disconnect...")
+    await ws.stomp_subscribe(topic, config.get_filter())
+    print("Press <Ctrl-C> to disconnect")
     while True:
-        future = asyncio.Future()
-        future_read = future_read_message(ws, future)
         try:
-            await asyncio.wait([future_read], return_when=FIRST_COMPLETED)
+            message = await ws.stomp_read_message()
+            message_json = json.loads(message)
+            print("message=" + json.dumps(message_json))
+        except ConnectionClosed:
+            print('Websocket connection closed')
+            break
         except asyncio.CancelledError:
             await ws.stomp_disconnect('123')
             # wait for receipt
             await asyncio.sleep(3)
             await ws.disconnect()
+            print("Websocket connection disconnected")
             break
-        else:
-            message = json.loads(future.result())
-            print("message=" + json.dumps(message))
 
 
 if __name__ == '__main__':
@@ -60,12 +52,4 @@ if __name__ == '__main__':
     secret = pxgrid.get_access_secret(pubsub_node_name)['secret']
     ws_url = pubsub_service['properties']['wsUrl']
 
-    loop = asyncio.get_event_loop()
-    subscribe_task = asyncio.ensure_future(subscribe_loop(config, secret, ws_url, topic))
-
-    # Setup signal handlers
-    loop.add_signal_handler(signal.SIGINT, subscribe_task.cancel)
-    loop.add_signal_handler(signal.SIGTERM, subscribe_task.cancel)
-
-    # Event loop
-    loop.run_until_complete(subscribe_task)
+    asyncio.run(subscribe_loop(config, secret, ws_url, topic))

@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -38,7 +39,7 @@ func main() {
 	}
 
 	// pxGrid ServiceLookup for Session Directory
-	services, err := control.ServiceLookup("com.cisco.ise.session")
+	services, err := control.ServiceLookup(config.service)
 	if err != nil {
 		log.Fatal(err)
 	} else if len(services) == 0 {
@@ -47,8 +48,8 @@ func main() {
 
 	// Use first service
 	wsPubsubService := services[0].Properties["wsPubsubService"]
-	sessionTopic := services[0].Properties["sessionTopic"]
-	log.Println("wsPubsubService=", wsPubsubService, "sessionTopic=", sessionTopic)
+	topic := services[0].Properties[config.topic]
+	log.Println("wsPubsubService=", wsPubsubService, "topic=", topic)
 
 	// pxGrid ServiceLookup for pubsub service
 	pubsubServices, err := control.ServiceLookup(wsPubsubService)
@@ -81,24 +82,31 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = endpoint.Subscribe(sessionTopic, config.filter)
+	err = endpoint.Subscribe(topic, config.filter)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	dataChan := make(chan *EndpointData)
 	go dataPrinter(dataChan)
-	go endpoint.Listener(dataChan)
+	wg := sync.WaitGroup{}
+
+	go func() {
+		wg.Add(1)
+		endpoint.Listener(dataChan)
+		wg.Done()
+	}()
 
 	// Setup abort channel
 	log.Println("Press <Ctrl-c> to disconnect...")
-	abort := make(chan os.Signal)
+	abort := make(chan os.Signal, 1)
 	signal.Notify(abort, os.Interrupt, syscall.SIGTERM)
 	<-abort
 
 	// Cleanup
 	log.Printf("Disconnecting websocket connection...")
 	endpoint.Disconnect()
+
+	wg.Wait()
 	close(dataChan)
-	log.Printf("...Done")
 }
