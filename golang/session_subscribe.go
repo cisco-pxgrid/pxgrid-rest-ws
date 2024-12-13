@@ -38,7 +38,7 @@ func main() {
 	}
 
 	// pxGrid ServiceLookup for Session Directory
-	services, err := control.ServiceLookup("com.cisco.ise.session")
+	services, err := control.ServiceLookup(config.service)
 	if err != nil {
 		log.Fatal(err)
 	} else if len(services) == 0 {
@@ -47,8 +47,8 @@ func main() {
 
 	// Use first service
 	wsPubsubService := services[0].Properties["wsPubsubService"]
-	sessionTopic := services[0].Properties["sessionTopic"]
-	log.Println("wsPubsubService=", wsPubsubService, "sessionTopic=", sessionTopic)
+	topic := services[0].Properties[config.topic]
+	log.Println("wsPubsubService=", wsPubsubService, "topic=", topic)
 
 	// pxGrid ServiceLookup for pubsub service
 	pubsubServices, err := control.ServiceLookup(wsPubsubService)
@@ -81,7 +81,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = endpoint.Subscribe(sessionTopic, config.filter)
+	err = endpoint.Subscribe(topic, config.filter)
 	if err != nil {
 		log.Fatal(err)
 	}

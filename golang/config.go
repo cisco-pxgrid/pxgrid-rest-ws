@@ -18,6 +18,11 @@ type Config struct {
 	caFile      string
 	insecure    bool
 	filter      string
+	service     string
+	topic       string
+	proxyHost   string
+	proxyPort   int
+	proxyBearer string
 }
 
 func NewConfig() *Config {
@@ -27,11 +32,16 @@ func NewConfig() *Config {
 	flag.StringVar(&c.nodeName, "n", "", "Node name")
 	flag.StringVar(&c.description, "d", "", "Description (optional)")
 	flag.StringVar(&c.filter, "f", "", "Server Side Filter (optional)")
+	flag.StringVar(&c.service, "service", "com.cisco.ise.session", "Service name (optional)")
+	flag.StringVar(&c.topic, "topic", "sessionTopic", "Topic name (optional)")
 	flag.StringVar(&c.certFile, "c", "", "Client certificate chain .pem filename (not required if password is specified)")
 	flag.StringVar(&c.keyFile, "k", "", "Client key unencrypted .key filename (not required if password is specified)")
 	flag.StringVar(&c.password, "w", "", "Password (not required if client certificate is specified)")
 	flag.StringVar(&c.caFile, "s", "", "Server certificates .pem filename")
 	flag.BoolVar(&c.insecure, "insecure", false, "Insecure skip validation")
+	flag.StringVar(&c.proxyHost, "proxyHost", "", "Proxy host (optional)")
+	flag.IntVar(&c.proxyPort, "proxyPort", 8080, "Proxy port (optional)")
+	flag.StringVar(&c.proxyBearer, "proxyBearer", "", "Proxy bearer token (optional)")
 	flag.Parse()
 	return c
 }

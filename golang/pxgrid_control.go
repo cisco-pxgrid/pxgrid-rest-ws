@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -52,8 +53,16 @@ func NewControl(config *Config) (control *Control, err error) {
 	}
 	transport := &http.Transport{
 		TLSClientConfig: tlsConfig,
-		Proxy:           http.ProxyFromEnvironment,
 	}
+	if config.proxyHost != "" {
+		transport.Proxy = http.ProxyURL(&url.URL{Scheme: "https", Host: config.proxyHost + ":" + strconv.Itoa(config.proxyPort)})
+	}
+	if config.proxyBearer != "" {
+		transport.ProxyConnectHeader = http.Header{
+			"Proxy-Authorization": {"Bearer " + config.proxyBearer},
+		}
+	}
+
 	control = &Control{
 		config: config,
 		client: &http.Client{Transport: transport},
